@@ -1,0 +1,232 @@
+---
+layout: false
+---
+<html>
+	<head>
+		<title>胖斯世界</title>
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+		<style type="text/css">
+			
+body {
+	margin: 0px 0px;
+	padding: 0px 0px;
+	overflow: hidden;
+}
+
+div {
+	color: #fff;
+}
+
+.space {
+	background : #000;
+	width : 100%;
+	height : 100%;
+}
+
+.space  div{
+	top:50%;
+	left:50%;
+	position:absolute;
+}
+
+.container {
+
+	background : #888;
+	
+    animation-play-state: running;
+    -webkit-animation-play-state: running;    
+}
+
+.container:hover {
+
+	background : #eee;
+	
+    animation-play-state: paused;
+    -webkit-animation-play-state: paused;
+	
+	transition: 3s;
+}
+
+#all-container {
+
+	background : #0f0f0f;
+
+    -moz-border-radius: 400px;
+    -webkit-border-radius: 400px;
+    border-radius: 400px;
+	
+	width : 800px;
+	height : 800px;
+	margin-left:-400px;
+	margin-top:-400px;
+	
+
+    animation: spin 80s linear infinite;
+    -webkit-animation: spin 80s linear infinite;
+	
+}
+
+#all-container:hover,
+#family-container:hover,
+#me-container:hover,
+#wife-container:hover,
+#child-container:hover {
+
+    animation-play-state: paused;
+    -webkit-animation-play-state: paused;
+	
+}
+
+#family-container {
+
+    -moz-border-radius: 120px;
+    -webkit-border-radius: 120px;
+    border-radius: 120px;
+	
+	width : 240px;
+	height : 240px;
+	margin-left:-120px;
+	margin-top:-120px;
+	
+    animation: spin 40s linear infinite;
+    -webkit-animation: spin 40s linear infinite;
+	
+	background-image:url(https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/life/myworld/wife.jpg);
+}
+
+#family {
+
+	width : 180px;
+	height : 180px;
+	margin-left:-90px;
+	margin-top:-90px;
+	font-size: 50;
+	font-weight:300;
+	
+}
+
+#family .words {
+	display:none;
+	margin-left:-90px;
+	margin-top:90px;
+}
+
+#family:hover .words {
+	display:block;
+}
+
+#wife-container {
+
+    -moz-border-radius: 40px;
+    -webkit-border-radius: 40px;
+    border-radius: 40px;
+	
+	width : 70px;
+	height : 70px;
+	margin-left:-330px;
+	margin-top:-30px;
+	
+    animation: spin 10s linear infinite;
+    -webkit-animation: spin 15s linear infinite;
+	
+	background-image:url(https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/life/myworld/me.jpg);
+}
+
+#wife {
+
+	width : 40px;
+	height : 40px;
+	margin-left:-30px;
+	margin-top:-30px;
+	font-size:20;
+	font-weight:300;
+}
+
+#wife .words {
+	display:none;
+	margin-left:-50px;
+	margin-top:50px;
+}
+
+#wife:hover .words {
+	display:block;
+}
+
+#child-container {
+
+    -moz-border-radius: 20px;
+    -webkit-border-radius: 20px;
+    border-radius: 20px;
+	
+	width : 40px;
+	height : 40px;
+	margin-left:-330px;
+	margin-top:15px;
+	
+    animation: spin 5s linear infinite;
+    -webkit-animation: spin 5s linear infinite;
+	
+	background-image:url(https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/life/myworld/child.jpg);
+}
+
+#child {
+
+	width : 30px;
+	height : 30px;
+	margin-left:-15px;
+	margin-top:-15px;
+	font-size:15;
+	font-weight:300;
+}
+
+#child .words {
+	display:none;
+	margin-left:-30px;
+	margin-top:30px;
+}
+
+#child:hover .words {
+	display:block;
+}
+
+@keyframes spin {
+	to {
+		-webkit-transform: rotate(1turn);
+		-ms-transform: rotate(1turn);
+	}
+}
+
+@-webkit-keyframes spin {
+	to {
+		-webkit-transform: rotate(1turn);
+		-ms-transform: rotate(1turn);
+	}
+}
+
+
+
+	  </style>
+	</head>
+	<body>
+		<div class="space">
+			<div class="container" id="all-container">
+				<div class="container" id="family-container">
+					<div id="family" alt="菲菲">
+						<div class="words">菲菲</div>
+					</div>
+				</div>
+				<div class="container" id="wife-container">
+					<div id="wife" alt="胖斯">
+						<div class="words">胖斯</div>
+					</div>
+				</div>
+				<div class="container" id="child-container">
+					<div id="child" alt="小可爱">
+						<div class="words">小可爱</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+
