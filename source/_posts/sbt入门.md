@@ -1,0 +1,136 @@
+title: sbt安装与仓库设置
+subtitle: sbt安装
+description: sbt的仓库配置
+keywords: [stb,scala,maven,仓库,阿里仓库]
+author: liyz
+date: 2018-09-13 14:20:4
+tags: [sbt,spark]
+category: [spark]
+---
+# sbt安装
+
+## 环境
+- `java 1.8`
+- `scala 2.12.6`
+- `sbt 1.2.1`
+- `idea2.18.3`
+## 软件
+- `idea sbt`插件
+- `idea scala`插件
+- sbt安装包 `https://sbt-downloads.cdnedge.bluemix.net/releases/v1.2.1/sbt-1.2.1.msi`,非必须，可直接使用idea的sbt插件做对应配置
+## 安装sbt
+1. 新建sbt安装路径，注意：**sbt安装路径中不能含有空格和中文**，将`sbt-1.2.1.msi`安装到此路径。
+2. 配置环境变量
+- 新建变量sbt
+> SBT_HOME  D:\ProgramFile\sbt
+- 添加变量到path中
+>  %SBT_HOME%bin;
+
+## 配置文件
+
+修改文件`onf/sbtconfig.txt`，添加以下内容
+> -Dfile.encoding=UTF8
+
+## sbt仓库设置
+### 方案一
+直接修改sbt的jar里面的配置文件。`windows`下可通过360压缩替换掉`jar`包里面的文件。
+
+1. 找到sbt安装目录`D:\ProgramFile\sbt\bin`
+2. 备份`sbt-launch.jar`为`sbt-launch.jar.bak`
+3. 解压`sbt-launch.jar.bak`,打开个`sbt.boot.properties`文件
+4. 在`[repositories]`里面的`local`下面添加以下数据源
+```
+alirepo1:https://maven.aliyun.com/repository/central
+alirepo2:https://maven.aliyun.com/repository/jcenter
+alirepo3:https://maven.aliyun.com/repository/public
+```
+5. 使用360压缩打开`sbt-launch.jar`,找到`sbt.boot.properties`文件并替换
+
+### 方案二
+配置sbt的数据源，让其优先加载我们配置的数据源
+1. 在`D:\ProgramFile\sbt\conf`目录下，新建文件`repository.properties`
+2. 在`repository.properties`中添加以下内容
+```
+[repositories]
+local
+alirepo1:https://maven.aliyun.com/repository/central
+alirepo2:https://maven.aliyun.com/repository/jcenter
+alirepo3:https://maven.aliyun.com/repository/public
+```
+3. 在`conf/sbtconfig.txt`中添加`repository.properties`文件路径
+```
+-Dsbt.repository.config=D:/ProgramFile/sbt/conf/repository.properties
+```
+
+## 添加依赖build.sbt
+在项目中找到`build.sbt`文件，此类似于`maven`中的`pom`文件
+添加`spark-core`和`spark-sql`等的依赖
+```
+name := "sbt-test" // 项目名称
+
+version := "0.1" // 项目版本号
+
+scalaVersion := "2.11.12" // scala版本号
+
+// 依赖
+libraryDependencies ++= Seq(
+  "org.apache.spark"  %%  "spark-core"    % "2.2.0",
+  "org.apache.spark"  %%  "spark-sql"     % "2.2.0",
+  "com.typesafe.scala-logging" % "scala-logging-slf4j_2.11" % "latest.integration"
+)
+```
+## 下载依赖
+通过以下方式打开执行命令窗口
+- 在`build.sbt`同级目录下打开`cmd`窗口
+- 在`idea`中打开`Termail`窗口
+
+下载或更新jar
+
+> sbt update
+
+编译文件
+
+> sbt compile
+
+打包
+
+> sbt package
+
+
+# 问题处理
+
+## 版本不兼容
+
+### jdk不兼容
+- `idea2018`需要`jdk8`以上
+- `spark2.0`需要`jdk8`以上
+## 文件下载缓慢
+`idea`控制台`build`界面一直在转圈,并提示`dump project structure from sbt`
+
+这里需要注意，在`Intellij Idea`启动时，会执行`dump project structure from sbt`的操作，也就是把sbt所需要的项目结构从远程服务器拉取到本地，在本地会生成sbt所需要的项目结构。由于是从国外的远程服务器下载，所以，这个过程很慢，笔者电脑上运行了15分钟。这个过程没有结束之前，上图中的`File->New`弹出的子菜单是找不到`Scala Class`这个选项的。所以，一定要等`dump project structure from sbt`的操作全部执行结束以后，再去按照上图操作来新建`Scala Class`文件。
+
+## 修改sbt数据源
+### 不靠谱方案
+1. 将数据源改为`maven.oschina.com`。此数据源已经失效
+2. 将`sbt.boot.properties`中的`https`改为`http`。未生效
+3. 在`sbt`的`vm`中配置`-Dsbt.override.build.repos=true`。此方法效果和`-Dsbt.repository.config=D:/ProgramFile/sbt/conf/repository.properties`一致，前提是需要配置数据源
+4. 最笨方案，下载jar包，放到本地仓库`C:\Users\suning\.ivy2\cache`
+
+### 修改成阿里云数据源后依旧下载失败
+
+- 配置的`sbt`版本在阿里云的仓库中没有。排查办法：可以去`maven.aliyun.com`去查看对应版本pom文件是否存在
+- 在阿里云上找到了对应版本但依旧保持。注意查看日志信息中下载的jar包路径含有`_2.10`类似的字样，比如在`build.sbt`中配置的是`"org.apache.spark"  %%  "spark-sql"     % "2.2.0"`,但是日志里面是`[warn]  :: com.typesafe.scala-logging#scala-sql_2.10;2.1.2: not found`,这个是因为sbt里面的`%%`代表sbt默认会拼接上scala的版本号在pom文件上，下载最适合的jar包，可以将`%%`改为`%`，即改为`"org.apache.spark"  %  "spark-sql"     % "2.2.0"`,注意区别：仅仅是少了一个百分号。
+- 执行`sbt-shell`会走默认的仓库配置，需要在sbt的vm参数中配置`-Dsbt.override.build.repos=true` ????
+## 查看配置参数是否生效
+可在日志控制台查看第一行日志，查看配置参数是否生效，走的是自己安装的sbt还是idea的插件,如下日志，在`sbtconfig.txt`中配置信息会进行加载
+```
+"C:\Program Files\Java\jdk8\bin\java.exe" -agentlib:jdwp=transport=dt_socket,address=localhost:58502,suspend=n,server=y -Xdebug -server -Xmx1536M 
+-Dsbt.repository.config=D:/develop/sbt/conf/repository.properties -Didea.managed=true -Dfile.encoding=UTF-8 
+-Didea.runid=2018.2 -jar D:\ProgramFile\sbt\bin\sbt-launch.jar idea-shell
+```
+
+**参考链接**
+
+https://www.scala-sbt.org/0.13/docs/Proxy-Repositories.html
+
+https://segmentfault.com/a/1190000002484978

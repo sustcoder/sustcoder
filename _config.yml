@@ -3,17 +3,17 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: feiyan
-subtitle:
-description:
-keywords:
-author: John Doe
-language:
-timezone:
+title: sustcoder
+subtitle: 
+description: 
+keywords: [java,js,scala,spark,hbase,实时计算]
+author: liyz
+language: 
+timezone: 
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://yoursite.com
+url: https://sustcoder.github.io
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -40,8 +40,8 @@ relative_link: false
 future: true
 highlight:
   enable: true
-  line_number: true
-  auto_detect: false
+  line_number: false
+  auto_detect: true
   tab_replace:
   
 # Home page setting
