@@ -1,3 +1,4 @@
+---
 title: sbt安装与仓库设置
 subtitle: sbt安装
 description: sbt的仓库配置

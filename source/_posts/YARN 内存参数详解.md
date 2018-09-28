@@ -1,0 +1,119 @@
+---
+title: YARN 内存参数详解
+subtitle: yarn启动报错
+description: yarn-site.xml参数优化
+keywords: [spark,yarn,环境,搭建]
+author: liyz
+date: 2018-09-27 10:27:04
+tags: [spark,环境]
+category: [spark]
+---
+## yarn组件依赖关系
+
+![yarn结果图](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/structure/yarn_structure.png)
+
+yarn主要由两部分组成，ResourceManager和NodeManger。NodeManager里面包含多个Container，每个Container里可以运行多个task，比如MapTask和ReduceTask等。ApplicationMaster也是在Container中运行。
+
+在YARN中，资源管理由ResourceManager和NodeManager共同完成，其中，**ResourceManager中的调度器负责资源的分配，而NodeManager则负责资源的供给和隔离**。ResourceManager将某个NodeManager上资源分配给任务（这就是所谓的“资源调度”）后，NodeManager需按照要求为任务提供相应的资源，甚至保证这些资源应具有独占性，为任务运行提供基础的保证，这就是所谓的资源隔离。
+
+关于yarn的详细介绍可参考：[yarn的架构及作业调度](https://my.oschina.net/freelili/blog/1853714)
+
+## 内存相关参数
+
+[yarn-site.xml官网参数表及其解释](https://hadoop.apache.org/docs/current/hadoop-yarn/hadoop-yarn-common/yarn-default.xml)
+
+| 配置文件        | 配置设置                                 | 默认值         |
+| --------------- | ---------------------------------------- | -------------- |
+| yarn-site.xml   | yarn.nodemanager.resource.memory-mb      | -1             |
+| yarn-site.xml   | yarn.nodemanager.vmem-pmem-ratio         | 2.1            |
+| yarn-site.xml   | yarn.nodemanager.vmem-check-enabled      | true           |
+| yarn-site.xml   | yarn.nodemanager.pmem-check-enabled      | true           |
+| yarn-site.xml   | yarn.scheduler.minimum-allocation-mb     | 1024MB         |
+| yarn-site.xml   | yarn.scheduler.maximum-allocation-mb     | 8192 MB        |
+| yarn-site.xml   | yarn.nodemanager.resource.cpu-vcores     | 8              |
+| yarn-site.xml   | yarn.scheduler.minimum-allocation-vcores | 1              |
+| yarn-site.xml   | yarn.scheduler.maximum-allocation-vcores | 32             |
+|                 |                                          |                |
+| mapred-site.xml | yarn.app.mapreduce.am.resource.mb        | 1536 MB        |
+| mapred-site.xml | yarn.app.mapreduce.am.command-opts       | -Xmx1024m      |
+| mapred-site.xml | mapreduce.map.memory.mb                  | 1024 MB        |
+| mapred-site.xml | mapreduce.reduce.memory.mb               | 1024 MB        |
+| mapred-site.xml | mapreduce.map.java.opts                  | 最新版已经去掉 |
+| mapred-site.xml | mapreduce.reduce.java.opts               | 最新版已经去掉 |
+
+## 参数解释
+
+### NodeManager
+
+- `yarn.nodemanager.resource.memory-mb`：节点最大可用内存，如果值为-1且`yarn.nodemanager.resource.detect-hardware-capabilities`值为`true`，则根据系统内存自动计算，否则默认值为8192M
+- `yarn.nodemanager.vmem-pmem-ratio`：虚拟内存率，Container 的虚拟内存大小的限制，每使用1MB物理内存，最多可用的虚拟内存数
+- `yarn.nodemanager.pmem-check-enabled`：是否启动一个线程检查每个任务正使用的物理内存量，如果任务超出分配值，则直接将其杀掉，默认是true;
+- `yarn.nodemanager.vmem-check-enabled`：是否启动一个线程检查每个任务正使用的虚拟内存量，如果任务超出分配值，则直接将其杀掉，默认是true
+
+### ResourceManager
+
+- `yarn.scheduler.minimum-allocation-mb`：单个任务可申请的最少物理内存量，默认是1024（MB），如果一个任务申请的物理内存量少于该值，则该对应的值改为这个数
+- `yarn.scheduler.maximum-allocation-mb`：单个任务可申请的最多物理内存量，默认是8192（MB）。
+
+### ApplicationMaster
+
+- `mapreduce.map.memory.mb`：分配给 Map Container的内存大小，默认为1024。如果Map Task实际使用的资源量超过该值，则会被强制杀死。
+- `mapreduce.reduce.memory.mb`：分配给 Reduce Container的内存大小，默认为1024。如果Reduce Task实际使用的资源量超过该值，则会被强制杀死。
+- `mapreduce.map.java.opts`：运行 Map 任务的 jvm 参数，如 -Xmx，-Xms 等选项
+- `mapreduce.reduce.java.opts`：运行 Reduce 任务的 jvm 参数，如-Xmx，-Xms等选项
+
+### CPU 资源
+
+- `yarn.nodemanager.resource.cpu-vcores`：该节点上 YARN 可使用的虚拟 CPU 个数，如果值是-1且`yarn.nodemanager.resource.detect-hardware-capabilities`值为·true`，则其cpu数目根据系统而定，否则默认值为8
+- `yarn.scheduler.minimum-allocation-vcores`：单个任务可申请的最小虚拟CPU个数, 默认是1
+- `yarn.scheduler.maximum-allocation-vcores`：单个任务可申请的最多虚拟CPU个数，默认是4
+
+## Killing Container
+
+在本地虚拟机上跑task时报错如下
+
+```shell
+Application application_1537990303043_0001 failed 2 times due to AM Container for appattempt_1537990303043_0001_000002 exited with  exitCode: -103
+Diagnostics: 
+Container [pid=2344,containerID=container_1537990303043_0001_02_000001] is running beyond virtual memory limits. 
+Current usage: 74.0 MB of 1 GB physical memory used; 
+2.2 GB of 2.1 GB virtual memory used. Killing container.
+```
+
+虚拟机物理内存设置的是1G，则对应虚拟内存最大为1*2.1=2.1GB,实际使用了2.2[此处疑问：为什么就使用了2.2，单个任务默认分配1024M，加上一个任务的Container默认1024M导致吗？]，所以需要扩大虚拟内存的比例，或者限制container和task的大小，或者关闭掉对虚拟内存的检测。
+
+### yarn-site.xml
+
+```xml
+  <!--
+  <property>
+      <name>yarn.scheduler.minimum-allocation-mb</name>
+      <value>256</value>
+      <description>每个container可申请最小内存</description>
+  </property>
+  <property>
+      <name>yarn.scheduler.maximum-allocation-mb</name>
+      <value>512</value>
+      <description>每个container可申请最大内存</description>
+  </property>
+  -->
+  <property>
+      <name>yarn.nodemanager.vmem-pmem-ratio</name>
+      <value>3</value>
+      <description>虚拟内存和物理内存比率，默认为2.1</description>
+  </property>
+  <property>
+    <name>yarn.nodemanager.vmem-check-enabled</name>
+    <value>false</value>
+    <description>不检查虚拟内存，默认为true</description>
+  </property>
+```
+
+## 混淆点
+
+`yarn.scheduler.minimum-allocation-mb`和`yarn.scheduler.maximum-allocation-mb`这两个参数不能限制任务的真正大小？？？
+
+这两个参数是管理员用来设置用户能够设置的每个任务可申请的最小和最大内存资源。具体每个任务到底申请多少，由各个应用程序单独设置，如果是mapreduce程序，可以map task申请的资源可通过mapreduce.map.memory.mb指定，reduce task的资源可通过mapreduce.reduce.memory.mb指定，这两个参数最大不能超过yarn.scheduler.maximum-allocation-mb
+
+
+
