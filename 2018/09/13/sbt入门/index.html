@@ -12,7 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
   
-    <meta name="keywords" content="sbt," />
+    <meta name="keywords" content="spark,sbt," />
   
 
   <meta name="description" content="sbt的仓库配置">
@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="sustcoder">
 <meta property="og:description" content="sbt的仓库配置">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-09-17T08:58:56.946Z">
+<meta property="og:updated_time" content="2018-09-17T09:27:58.630Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="sbt安装与仓库设置">
 <meta name="twitter:description" content="sbt的仓库配置">
@@ -254,7 +254,7 @@
 <li>备份<code>sbt-launch.jar</code>为<code>sbt-launch.jar.bak</code></li>
 <li>解压<code>sbt-launch.jar.bak</code>,打开个<code>sbt.boot.properties</code>文件</li>
 <li><p>在<code>[repositories]</code>里面的<code>local</code>下面添加以下数据源</p>
-<figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line"><span class="string">alirepo1:</span><span class="string">https:</span><span class="comment">//maven.aliyun.com/repository/central</span></span><br><span class="line"><span class="string">alirepo2:</span><span class="string">https:</span><span class="comment">//maven.aliyun.com/repository/jcenter</span></span><br><span class="line"><span class="string">alirepo3:</span><span class="string">https:</span><span class="comment">//maven.aliyun.com/repository/public</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">alirepo1:https://maven.aliyun.com/repository/central</span><br><span class="line">alirepo2:https://maven.aliyun.com/repository/jcenter</span><br><span class="line">alirepo3:https://maven.aliyun.com/repository/public</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>使用360压缩打开<code>sbt-launch.jar</code>,找到<code>sbt.boot.properties</code>文件并替换</p>
 </li>
@@ -263,13 +263,13 @@
 <ol>
 <li>在<code>D:\ProgramFile\sbt\conf</code>目录下，新建文件<code>repository.properties</code></li>
 <li><p>在<code>repository.properties</code>中添加以下内容</p>
-<figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">[repositories]</span><br><span class="line">local</span><br><span class="line"><span class="string">alirepo1:</span><span class="string">https:</span><span class="comment">//maven.aliyun.com/repository/central</span></span><br><span class="line"><span class="string">alirepo2:</span><span class="string">https:</span><span class="comment">//maven.aliyun.com/repository/jcenter</span></span><br><span class="line"><span class="string">alirepo3:</span><span class="string">https:</span><span class="comment">//maven.aliyun.com/repository/public</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">[repositories]</span><br><span class="line">local</span><br><span class="line">alirepo1:https://maven.aliyun.com/repository/central</span><br><span class="line">alirepo2:https://maven.aliyun.com/repository/jcenter</span><br><span class="line">alirepo3:https://maven.aliyun.com/repository/public</span><br></pre></td></tr></table></figure>
 </li>
 <li><p>在<code>conf/sbtconfig.txt</code>中添加<code>repository.properties</code>文件路径</p>
-<figure class="highlight groovy"><table><tr><td class="code"><pre><span class="line">-Dsbt.repository.config=<span class="string">D:</span><span class="regexp">/ProgramFile/</span>sbt<span class="regexp">/conf/</span>repository.properties</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">-Dsbt.repository.config=D:/ProgramFile/sbt/conf/repository.properties</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<h2 id="添加依赖build-sbt"><a href="#添加依赖build-sbt" class="headerlink" title="添加依赖build.sbt"></a>添加依赖build.sbt</h2><p>在项目中找到<code>build.sbt</code>文件，此类似于<code>maven</code>中的<code>pom</code>文件<br>添加<code>spark-core</code>和<code>spark-sql</code>等的依赖<br><figure class="highlight go"><table><tr><td class="code"><pre><span class="line">name := <span class="string">"sbt-test"</span> <span class="comment">// 项目名称</span></span><br><span class="line"></span><br><span class="line">version := <span class="string">"0.1"</span> <span class="comment">// 项目版本号</span></span><br><span class="line"></span><br><span class="line">scalaVersion := <span class="string">"2.11.12"</span> <span class="comment">// scala版本号</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 依赖</span></span><br><span class="line">libraryDependencies ++= Seq(</span><br><span class="line">  <span class="string">"org.apache.spark"</span>  %%  <span class="string">"spark-core"</span>    % <span class="string">"2.2.0"</span>,</span><br><span class="line">  <span class="string">"org.apache.spark"</span>  %%  <span class="string">"spark-sql"</span>     % <span class="string">"2.2.0"</span>,</span><br><span class="line">  <span class="string">"com.typesafe.scala-logging"</span> % <span class="string">"scala-logging-slf4j_2.11"</span> % <span class="string">"latest.integration"</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<h2 id="添加依赖build-sbt"><a href="#添加依赖build-sbt" class="headerlink" title="添加依赖build.sbt"></a>添加依赖build.sbt</h2><p>在项目中找到<code>build.sbt</code>文件，此类似于<code>maven</code>中的<code>pom</code>文件<br>添加<code>spark-core</code>和<code>spark-sql</code>等的依赖<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">name := &quot;sbt-test&quot; // 项目名称</span><br><span class="line"></span><br><span class="line">version := &quot;0.1&quot; // 项目版本号</span><br><span class="line"></span><br><span class="line">scalaVersion := &quot;2.11.12&quot; // scala版本号</span><br><span class="line"></span><br><span class="line">// 依赖</span><br><span class="line">libraryDependencies ++= Seq(</span><br><span class="line">  &quot;org.apache.spark&quot;  %%  &quot;spark-core&quot;    % &quot;2.2.0&quot;,</span><br><span class="line">  &quot;org.apache.spark&quot;  %%  &quot;spark-sql&quot;     % &quot;2.2.0&quot;,</span><br><span class="line">  &quot;com.typesafe.scala-logging&quot; % &quot;scala-logging-slf4j_2.11&quot; % &quot;latest.integration&quot;</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
 <h2 id="下载依赖"><a href="#下载依赖" class="headerlink" title="下载依赖"></a>下载依赖</h2><p>通过以下方式打开执行命令窗口</p>
 <ul>
 <li>在<code>build.sbt</code>同级目录下打开<code>cmd</code>窗口</li>
@@ -301,7 +301,7 @@
 <h3 id="修改成阿里云数据源后依旧下载失败"><a href="#修改成阿里云数据源后依旧下载失败" class="headerlink" title="修改成阿里云数据源后依旧下载失败"></a>修改成阿里云数据源后依旧下载失败</h3><ul>
 <li>配置的<code>sbt</code>版本在阿里云的仓库中没有。排查办法：可以去<code>maven.aliyun.com</code>去查看对应版本pom文件是否存在</li>
 <li>在阿里云上找到了对应版本但依旧保持。注意查看日志信息中下载的jar包路径含有<code>_2.10</code>类似的字样，比如在<code>build.sbt</code>中配置的是<code>&quot;org.apache.spark&quot;  %%  &quot;spark-sql&quot;     % &quot;2.2.0&quot;</code>,但是日志里面是<code>[warn]  :: com.typesafe.scala-logging#scala-sql_2.10;2.1.2: not found</code>,这个是因为sbt里面的<code>%%</code>代表sbt默认会拼接上scala的版本号在pom文件上，下载最适合的jar包，可以将<code>%%</code>改为<code>%</code>，即改为<code>&quot;org.apache.spark&quot;  %  &quot;spark-sql&quot;     % &quot;2.2.0&quot;</code>,注意区别：仅仅是少了一个百分号。</li>
-<li>执行<code>sbt-shell</code>会走默认的仓库配置，需要在sbt的vm参数中配置<code>-Dsbt.override.build.repos=true</code> ????<h2 id="查看配置参数是否生效"><a href="#查看配置参数是否生效" class="headerlink" title="查看配置参数是否生效"></a>查看配置参数是否生效</h2>可在日志控制台查看第一行日志，查看配置参数是否生效，走的是自己安装的sbt还是idea的插件,如下日志，在<code>sbtconfig.txt</code>中配置信息会进行加载<figure class="highlight routeros"><table><tr><td class="code"><pre><span class="line"><span class="string">"C:\Program Files\Java\jdk8\bin\java.exe"</span> -agentlib:<span class="attribute">jdwp</span>=transport=dt_socket,address=localhost:58502,suspend=n,server=y -Xdebug -server -Xmx1536M </span><br><span class="line">-Dsbt.repository.<span class="attribute">config</span>=D:/develop/sbt/conf/repository.properties -Didea.<span class="attribute">managed</span>=<span class="literal">true</span> -Dfile.<span class="attribute">encoding</span>=UTF-8 </span><br><span class="line">-Didea.<span class="attribute">runid</span>=2018.2 -jar D:\ProgramFile\sbt\bin\sbt-launch.jar idea-shell</span><br></pre></td></tr></table></figure>
+<li>执行<code>sbt-shell</code>会走默认的仓库配置，需要在sbt的vm参数中配置<code>-Dsbt.override.build.repos=true</code> ????<h2 id="查看配置参数是否生效"><a href="#查看配置参数是否生效" class="headerlink" title="查看配置参数是否生效"></a>查看配置参数是否生效</h2>可在日志控制台查看第一行日志，查看配置参数是否生效，走的是自己安装的sbt还是idea的插件,如下日志，在<code>sbtconfig.txt</code>中配置信息会进行加载<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&quot;C:\Program Files\Java\jdk8\bin\java.exe&quot; -agentlib:jdwp=transport=dt_socket,address=localhost:58502,suspend=n,server=y -Xdebug -server -Xmx1536M </span><br><span class="line">-Dsbt.repository.config=D:/develop/sbt/conf/repository.properties -Didea.managed=true -Dfile.encoding=UTF-8 </span><br><span class="line">-Didea.runid=2018.2 -jar D:\ProgramFile\sbt\bin\sbt-launch.jar idea-shell</span><br></pre></td></tr></table></figure>
 </li>
 </ul>
 <p><strong>参考链接</strong></p>
@@ -347,7 +347,7 @@
     <a class="show pull-left" href="/2018/09/10/hello-world/">
         <i class="icon icon-angle-left"></i>
     </a>
-    <a class="hide pull-right" href="/">
+    <a class="show pull-right" href="/2018/09/18/windows下JDK版本切换脚本/">
         <i class="icon icon-angle-right"></i>
     </a>
   </div>
