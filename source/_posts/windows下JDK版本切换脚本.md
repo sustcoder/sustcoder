@@ -5,8 +5,8 @@ description: jdk版本切换
 keywords: [jdk,版本,切换]
 author: liyz
 date: 2018-09-18 10:07:04
-tags: [tool,jdk,思考]
-category: [tool]
+tags: [tools,jdk,思考]
+category: [tools]
 ---
 
 # 初衷

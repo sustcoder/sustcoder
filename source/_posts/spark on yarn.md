@@ -260,7 +260,7 @@ Current usage: 74.0 MB of 1 GB physical memory used;
 
 **解决方法**
 
-修改`yarn-site.xml`文件，新增以下内容，详情原因请参考：[YARN 内存参数详解]()
+修改`yarn-site.xml`文件，新增以下内容，详情原因请参考：[YARN 内存参数详解](https://sustcoder.github.io/2018/09/27/YARN%20%E5%86%85%E5%AD%98%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3/)
 
 ```xml
   <property>
