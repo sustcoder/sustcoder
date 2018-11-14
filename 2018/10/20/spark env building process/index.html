@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>spark环境搭建杂记 | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="replay," />
+  
+
+  <meta name="description" content="spark环境搭建杂记开发者如何进行持续高效的学习 ？？？ 背景最初搭建环境的目的只是为了跑spark程序，从开始搭建spark环境到最后跑spark环境断断续续用了16天，最后却发现如果想实现初衷，仅仅需要在之前运行scala程序的基础上，花费一天最多两天的时间就可以完成（实际完成这块搭建工作用了不到两小时）。严重浪费了时间，影响了学习进度。在解决问题的过程中发现一个园岭只有五个月的博客，但是高">
+<meta name="keywords" content="复盘">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark环境搭建杂记">
+<meta property="og:url" content="https://sustcoder.github.io/2018/10/20/spark env building process/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="spark环境搭建杂记开发者如何进行持续高效的学习 ？？？ 背景最初搭建环境的目的只是为了跑spark程序，从开始搭建spark环境到最后跑spark环境断断续续用了16天，最后却发现如果想实现初衷，仅仅需要在之前运行scala程序的基础上，花费一天最多两天的时间就可以完成（实际完成这块搭建工作用了不到两小时）。严重浪费了时间，影响了学习进度。在解决问题的过程中发现一个园岭只有五个月的博客，但是高">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2018-11-14T04:01:06.912Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark环境搭建杂记">
+<meta name="twitter:description" content="spark环境搭建杂记开发者如何进行持续高效的学习 ？？？ 背景最初搭建环境的目的只是为了跑spark程序，从开始搭建spark环境到最后跑spark环境断断续续用了16天，最后却发现如果想实现初衷，仅仅需要在之前运行scala程序的基础上，花费一天最多两天的时间就可以完成（实际完成这块搭建工作用了不到两小时）。严重浪费了时间，影响了学习进度。在解决问题的过程中发现一个园岭只有五个月的博客，但是高">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?57e94d016e201fba3603a8a2b0263af0";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#spark环境搭建杂记"><span class="toc-text">spark环境搭建杂记</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#背景"><span class="toc-text">背景</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#心路历程"><span class="toc-text">心路历程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#复盘"><span class="toc-text">复盘</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#决策"><span class="toc-text">决策</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#放弃"><span class="toc-text">放弃</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#搜索"><span class="toc-text">搜索</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#信息"><span class="toc-text">信息</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-spark env building process" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">spark环境搭建杂记</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.10.20</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>liyz</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/replay/">replay</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2018/10/20/spark env building process/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h2 id="spark环境搭建杂记"><a href="#spark环境搭建杂记" class="headerlink" title="spark环境搭建杂记"></a>spark环境搭建杂记</h2><p><em>开发者如何进行持续高效的学习</em> ？？？</p>
+<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>最初搭建环境的目的只是为了跑spark程序，从开始搭建spark环境到最后跑spark环境断断续续用了16天，最后却发现如果想实现初衷，仅仅需要在之前运行scala程序的基础上，花费一天最多两天的时间就可以完成（实际完成这块搭建工作用了不到两小时）。严重浪费了时间，影响了学习进度。在解决问题的过程中发现一个园岭只有五个月的博客，但是高产了一百多偏博客，其中spark模块的阅读量基本在500左右，其也是从搭建环境开始写博客，内容详细且易懂。觉得是时候对此过程进行复盘了。</p>
+<h2 id="心路历程"><a href="#心路历程" class="headerlink" title="心路历程"></a>心路历程</h2><p>我是照着<a href="http://allaboutscala.com" target="_blank" rel="noopener">http://allaboutscala.com</a> 网站进行学习的，在学完scala后，开始学习spark了，但是第一步就卡主了，网站没有搭建开发环境的教程。但是示例中有提到SBT，所以就弃用maven转战SBT了，本以为和maven类似，配置完仓库自动下载就ok了，但事与愿违，依赖总是下载失败，在各种google后，<a href="https://sustcoder.github.io/2018/09/13/sbt%E5%85%A5%E9%97%A8/">终于搭建好了sbt环境</a>。此过程浪费时间主要在于好多博客介绍方法比如oschina的仓库已经过时，阿里云的仓库数据不全等。</p>
+<p>sbt环境搭建完毕后开始写spark程序，但是spark-context直接就报错了，然后就开始了搭建spark环境，因为vm上已经有一个伪分布式的spark集群了，所以就想着通过idea直连伪集群，将代码直接提交到伪集群上运行。按照这个思想在idea里面写了一个程序后就直接跑了，各种报错各种找原因，最后博友建议先保证服务器环境没问题，所以开始了spark-submit提交Spark-Pi.jar。此过程是照着spark官网给的demo进行测试的，在local模式下没问题，但是在cluster模式下一直报错，然后开始疯狂寻找答案，网上也给报错对应了很多解决方法。但无一例外失败告终，最后无奈之下，放弃了在伪分布式集群上提交jar，转真正的全分布式。</p>
+<p>之前有搭建过hadoop的高可用集群，想着这个过程应该轻车熟路了吧，但是依旧有好多坑，记录的笔记有遗漏点，本着对自己的信任，照着笔记按步照班，不幸的是这个过程中错误百出。好多细节笔记上没有记录，细节的叠加导致新的问题，只能再次疯狂的寻找各种答案各种尝试。</p>
+<p>集群搭建完成后，开始配置spark环境，发现之前在伪分布式上搜索的好多答案都是针对完全分布式的解决方法，心痛。配置完成后，通过spark-submit也可以提交jar了，开始运行idea中的spark程序，不出意外还是报错，报错原因和最开始调用伪分布式环境时的类似，而且都有类似前提就是本地需要spark环境，在最开始就是为了不想在本地配置spark环境才开始直接在服务器上配置的，无奈之下配置好本地spark环境，意外发现通过local模式可以不连接服务器也可以在idea跑spark程序了，这不就是我最初的目标吗？伤心欲绝，打算暂停本地访问yarn集群时，还是决定最后一搏，通过报错信息搜索到了一个解决方法，初看不是很靠谱，但是还是照着其步骤修改了，惊喜随之而来，至此环境搭建完成。</p>
+<h2 id="复盘"><a href="#复盘" class="headerlink" title="复盘"></a>复盘</h2><h3 id="决策"><a href="#决策" class="headerlink" title="决策"></a>决策</h3><p>决策取决于很多因素，在完全不懂spark环境时，是根据自己仅有的知识去判断下一步应该怎么做，导致路线方针性错误。如果最开始直接搭建本地环境，则不会有这么曲折的过程，还有过程中在伪分布式上跑jar，使用sbt还是maven等。</p>
+<p>怎样才能做好决策。<strong>首先得弄清楚自己的根本需求是什么，我接下来要干什么</strong>，我的最初目标只是为了让spark程序跑起来，至于怎么跑我是不关心的。那么去寻找解决办法时就会变成“怎样跑spark程序”，然后就会发现可以直接在本地运行，也可以在服务器上运行。然后就是选择问题了，我到底选择哪一种呢，那么就得需要<strong>收集各种方法的优劣来进行权衡</strong>，但是如果再选一次我依旧会选择在服务器上跑吧，因为伪分布式环境是现成的，这中间又牵引出另一个问题，什么时候进行放弃，当此路不通的时候，我是誓死完成，还是换条路，我当时的想法是非要把你弄出来。</p>
+<h3 id="放弃"><a href="#放弃" class="headerlink" title="放弃"></a>放弃</h3><p>什么时候放弃当前的方向。我们经常会因为一个问题阻塞很久，但是不愿放弃当前的方向，主要原因有两个：不想放弃已有成果、再想想办法肯定可以解决。但往往也是在此时陷入了死循环。那么在什么时候放弃呢，就目前经验而言：</p>
+<ol>
+<li>搜索出来的解决方案大同小异，而且都尝试过。此时也需要考虑搜索方式是否正确</li>
+<li>停止寻找答案，对问题再次进行分析，找次思路可行性的论证，如果发现当前方向没有理论支持时</li>
+</ol>
+<h3 id="搜索"><a href="#搜索" class="headerlink" title="搜索"></a>搜索</h3><p>越来越觉得搜索是门艺术，许多问题的解决都是在输入了对应关键字后，得到了搜索结果。一个是不断整理搜索引擎的使用技巧，google有联系搜索的网站，后期有时间了还是需要学习一下。另一个就是当搜索结果没有答案时，就需要考虑自己的关键字是否正确了，还是那个问题，我到底要什么，这个问题的根本原因是什么，大家在记录此问题时会有哪些关键信息，这个关键字还有哪些叫法等等，此处还需加强联系，搜索技能太落后。</p>
+<h3 id="信息"><a href="#信息" class="headerlink" title="信息"></a>信息</h3><p>目前解决问题的问题比较单一，主要还是通过google,对源码和官方文档的依赖较少，对于初学者直接阅读源码效果较慢但是可以更深入理解问题原因。官方文档需要去快速定位到文档位置，此处就需要英文阅读能力了，因为英文的原因，总是对阅读文档有内心的抗拒，博客的内容都是在特定场景下发生的，不一定适用自己，而文档的内容是最权威的。还有一个就是对于论坛，文档搜索答案困难可以去其对应论坛找答案比在博客找到的答案更精确，解答也更深入，Spark user list是spark的问题的一个问题聚集地，在解决掉问题后才发现这个地方，以后应主动去寻找类似论坛，然后去寻找答案。</p>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/10/16/RDD explain/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2018/11/14/Data consistency  in microservices/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2018/10/20/spark env building process/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
