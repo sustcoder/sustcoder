@@ -15,13 +15,13 @@
     <meta name="keywords" content="translate,microservices," />
   
 
-  <meta name="description" content="微服务架构中的数据一致性Data consistency一致性 in microservices微服务architecture架构 In microservices, one logically atomic operation原子操作 can frequently span 跨越multiple microservices. Even a monolithic单片的 system might u">
+  <meta name="description" content="Data consistency一致性 in microservices微服务architecture架构 In microservices, one logically atomic operation原子操作 can frequently span 跨越multiple microservices. Even a monolithic单片的 system might use multiple">
 <meta name="keywords" content="microservices">
 <meta property="og:type" content="article">
 <meta property="og:title" content="微服务架构中的数据一致性">
 <meta property="og:url" content="https://sustcoder.github.io/2018/11/14/Data consistency  in microservices/index.html">
 <meta property="og:site_name" content="sustcoder">
-<meta property="og:description" content="微服务架构中的数据一致性Data consistency一致性 in microservices微服务architecture架构 In microservices, one logically atomic operation原子操作 can frequently span 跨越multiple microservices. Even a monolithic单片的 system might u">
+<meta property="og:description" content="Data consistency一致性 in microservices微服务architecture架构 In microservices, one logically atomic operation原子操作 can frequently span 跨越multiple microservices. Even a monolithic单片的 system might use multiple">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/distribute/1.jpg">
 <meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/distribute/2.jpg">
@@ -32,10 +32,10 @@
 <meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/distribute/8.jpg">
 <meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/distribute/9.jpg">
 <meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/distribute/10.jpg">
-<meta property="og:updated_time" content="2018-11-14T04:00:02.391Z">
+<meta property="og:updated_time" content="2018-11-14T06:18:06.010Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="微服务架构中的数据一致性">
-<meta name="twitter:description" content="微服务架构中的数据一致性Data consistency一致性 in microservices微服务architecture架构 In microservices, one logically atomic operation原子操作 can frequently span 跨越multiple microservices. Even a monolithic单片的 system might u">
+<meta name="twitter:description" content="Data consistency一致性 in microservices微服务architecture架构 In microservices, one logically atomic operation原子操作 can frequently span 跨越multiple microservices. Even a monolithic单片的 system might use multiple">
 <meta name="twitter:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/distribute/1.jpg">
 
   
@@ -180,7 +180,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#微服务架构中的数据一致性"><span class="toc-text">微服务架构中的数据一致性</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#SAGA模式"><span class="toc-text">SAGA模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Reconciliation-对账"><span class="toc-text">Reconciliation 对账</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Event-log-日志事件"><span class="toc-text">Event log 日志事件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Orchestration-vs-choreography-编曲和编舞"><span class="toc-text">Orchestration vs. choreography 编曲和编舞</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Single-write-with-events"><span class="toc-text">Single-write with events</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Event-first-“事件优先”原则"><span class="toc-text">Event-first “事件优先”原则</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Consistency-by-design"><span class="toc-text">Consistency by design</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Accepting-inconsistency-接受不一致"><span class="toc-text">Accepting inconsistency 接受不一致</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Which-solution-to-choose"><span class="toc-text">Which solution to choose</span></a></li></ol></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#SAGA模式"><span class="toc-text">SAGA模式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Reconciliation-对账"><span class="toc-text">Reconciliation 对账</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Event-log-日志事件"><span class="toc-text">Event log 日志事件</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Orchestration-vs-choreography-编曲和编舞"><span class="toc-text">Orchestration vs. choreography 编曲和编舞</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Single-write-with-events"><span class="toc-text">Single-write with events</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Event-first-“事件优先”原则"><span class="toc-text">Event-first “事件优先”原则</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Consistency-by-design"><span class="toc-text">Consistency by design</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Accepting-inconsistency-接受不一致"><span class="toc-text">Accepting inconsistency 接受不一致</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Which-solution-to-choose"><span class="toc-text">Which solution to choose</span></a></li></ol>
   </div>
 
 
@@ -231,7 +231,7 @@
 
   <div class="article-content">
     
-      <h1 id="微服务架构中的数据一致性"><a href="#微服务架构中的数据一致性" class="headerlink" title="微服务架构中的数据一致性"></a>微服务架构中的数据一致性</h1><p>Data <strong>consistency</strong><sub>一致性</sub> in <strong>microservices</strong><sub>微服务</sub><strong>architecture</strong><sub>架构</sub></p>
+      <p>Data <strong>consistency</strong><sub>一致性</sub> in <strong>microservices</strong><sub>微服务</sub><strong>architecture</strong><sub>架构</sub></p>
 <p>In microservices, one logically <strong>atomic operation</strong><sub>原子操作</sub> can frequently <strong>span</strong> <sub>跨越</sub>multiple microservices. Even a <strong>monolithic</strong><sub>单片的</sub> system might use multiple databases or messaging solutions. With several independent <strong>data storage solutions</strong><sub>数据存储方案</sub>, we risk inconsistent data if one of the distributed process participants fails — such as <strong>charging</strong><sub>收费</sub> a customer without placing the order or not <strong>notifying</strong> <sub>通知</sub>the customer that the order succeeded. In this article, I’d like to share some of the techniques I’ve learned for making data between microservices <strong>eventually consistent</strong><sub>最终一致性</sub></p>
 <p>在微服务中，逻辑上的原子操作经常跨越多个微服务。即使是单体应用架构下，也可能使用多个数据库或消息队列解决方案。使用几种独立的数据存储解决方案，如果分布式流程参与者之一失败，我们将面临数据不一致的风险，例如，向客户收费而不下订单，或者不通知客户订单成功。在本文中，我想分享一些在微服务体系架构下确保数据最终一致的技术。</p>
 <p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/distribute/1.jpg" alt="Distributed process failures"></p>

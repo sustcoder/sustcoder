@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="sustcoder">
 <meta property="og:description" content="sbt的仓库配置">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-09-17T09:27:58.630Z">
+<meta property="og:updated_time" content="2018-11-14T06:18:37.618Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="sbt安装与仓库设置">
 <meta name="twitter:description" content="sbt的仓库配置">
@@ -170,7 +170,7 @@
 
   <div id="toc" class="toc-article">
     <strong class="toc-title">文章目录</strong>
-    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#sbt安装"><span class="toc-text">sbt安装</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#环境"><span class="toc-text">环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#软件"><span class="toc-text">软件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装sbt"><span class="toc-text">安装sbt</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#配置文件"><span class="toc-text">配置文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#sbt仓库设置"><span class="toc-text">sbt仓库设置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#方案一"><span class="toc-text">方案一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#方案二"><span class="toc-text">方案二</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#添加依赖build-sbt"><span class="toc-text">添加依赖build.sbt</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#下载依赖"><span class="toc-text">下载依赖</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#问题处理"><span class="toc-text">问题处理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#版本不兼容"><span class="toc-text">版本不兼容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#jdk不兼容"><span class="toc-text">jdk不兼容</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#文件下载缓慢"><span class="toc-text">文件下载缓慢</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#修改sbt数据源"><span class="toc-text">修改sbt数据源</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#不靠谱方案"><span class="toc-text">不靠谱方案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#修改成阿里云数据源后依旧下载失败"><span class="toc-text">修改成阿里云数据源后依旧下载失败</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#查看配置参数是否生效"><span class="toc-text">查看配置参数是否生效</span></a></li></ol></li></ol>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#环境"><span class="toc-text">环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#软件"><span class="toc-text">软件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装sbt"><span class="toc-text">安装sbt</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#配置文件"><span class="toc-text">配置文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#sbt仓库设置"><span class="toc-text">sbt仓库设置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#方案一"><span class="toc-text">方案一</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#方案二"><span class="toc-text">方案二</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#添加依赖build-sbt"><span class="toc-text">添加依赖build.sbt</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#下载依赖"><span class="toc-text">下载依赖</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#问题处理"><span class="toc-text">问题处理</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#版本不兼容"><span class="toc-text">版本不兼容</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#jdk不兼容"><span class="toc-text">jdk不兼容</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#文件下载缓慢"><span class="toc-text">文件下载缓慢</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#修改sbt数据源"><span class="toc-text">修改sbt数据源</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#不靠谱方案"><span class="toc-text">不靠谱方案</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#修改成阿里云数据源后依旧下载失败"><span class="toc-text">修改成阿里云数据源后依旧下载失败</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#查看配置参数是否生效"><span class="toc-text">查看配置参数是否生效</span></a></li></ol>
   </div>
 
 
@@ -221,7 +221,7 @@
 
   <div class="article-content">
     
-      <h1 id="sbt安装"><a href="#sbt安装" class="headerlink" title="sbt安装"></a>sbt安装</h1><h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
+      <h2 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h2><ul>
 <li><code>java 1.8</code></li>
 <li><code>scala 2.12.6</code></li>
 <li><code>sbt 1.2.1</code></li>
