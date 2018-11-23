@@ -178,8 +178,7 @@ about:
   - type: me
     icon: icon-user
     text_value:
-    - "liyz, 1992 , sust."
-    - "唯有code能让我忘记所有."
+    - "good good study day day up"
     - "开发工程师，常用 java / scala / spark."
   - type: Github
     icon: icon-github

@@ -178,8 +178,7 @@ about:
   - type: me
     icon: icon-user
     text_value:
-    - "liyz, 1992 , sust."
-    - "唯有code能让我忘记所有."
+    - "商山码客"
     - "开发工程师，常用 java / scala / spark."
   - type: Github
     icon: icon-github
@@ -189,7 +188,7 @@ about:
   - type: weibo
     icon: icon-weibo
     text_key: oschina
-    text_value: "@forsigner"
+    text_value: "@freelili"
     text_value_url: http://my.oschina.net/freelili
   - type: mail
     icon: icon-mail

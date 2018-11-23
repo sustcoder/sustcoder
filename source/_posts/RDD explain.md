@@ -9,8 +9,6 @@ tags: [spark,RDD]
 category: [spark]
 ---
 
-# 1. RDD介绍
-
 ## 1.1 什么是RDD
 
 ### 1.1.1 产生背景

@@ -9,8 +9,6 @@ tags: [translate,microservices]
 category: [translate]
 ---
 
-# 微服务架构中的数据一致性
-
 Data **consistency**<sub>一致性</sub> in **microservices**<sub>微服务</sub>**architecture**<sub>架构</sub>
 
 In microservices, one logically **atomic operation**<sub>原子操作</sub> can frequently **span** <sub>跨越</sub>multiple microservices. Even a **monolithic**<sub>单片的</sub> system might use multiple databases or messaging solutions. With several independent **data storage solutions**<sub>数据存储方案</sub>, we risk inconsistent data if one of the distributed process participants fails — such as **charging**<sub>收费</sub> a customer without placing the order or not **notifying** <sub>通知</sub>the customer that the order succeeded. In this article, I’d like to share some of the techniques I’ve learned for making data between microservices **eventually consistent**<sub>最终一致性</sub>

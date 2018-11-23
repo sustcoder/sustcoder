@@ -8,8 +8,6 @@ date: 2018-09-13 14:20:4
 tags: [sbt,spark]
 category: [spark]
 ---
-# sbt安装
-
 ## 环境
 - `java 1.8`
 - `scala 2.12.6`

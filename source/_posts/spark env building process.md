@@ -9,8 +9,6 @@ tags: [replay]
 category: [replay]
 ---
 
-## spark环境搭建杂记
-
 *开发者如何进行持续高效的学习* ？？？
 
 ## 背景
