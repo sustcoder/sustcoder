@@ -23,7 +23,7 @@
 <meta property="og:site_name" content="sustcoder">
 <meta property="og:description" content="sbt的仓库配置">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-11-14T06:18:37.618Z">
+<meta property="og:updated_time" content="2018-11-30T07:15:38.862Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="sbt安装与仓库设置">
 <meta name="twitter:description" content="sbt的仓库配置">
@@ -296,7 +296,7 @@
 <li>将数据源改为<code>maven.oschina.com</code>。此数据源已经失效</li>
 <li>将<code>sbt.boot.properties</code>中的<code>https</code>改为<code>http</code>。未生效</li>
 <li>在<code>sbt</code>的<code>vm</code>中配置<code>-Dsbt.override.build.repos=true</code>。此方法效果和<code>-Dsbt.repository.config=D:/ProgramFile/sbt/conf/repository.properties</code>一致，前提是需要配置数据源</li>
-<li>最笨方案，下载jar包，放到本地仓库<code>C:\Users\suning\.ivy2\cache</code></li>
+<li>最笨方案，下载jar包，放到本地仓库<code>C:\Users\sustcoder\.ivy2\cache</code></li>
 </ol>
 <h3 id="修改成阿里云数据源后依旧下载失败"><a href="#修改成阿里云数据源后依旧下载失败" class="headerlink" title="修改成阿里云数据源后依旧下载失败"></a>修改成阿里云数据源后依旧下载失败</h3><ul>
 <li>配置的<code>sbt</code>版本在阿里云的仓库中没有。排查办法：可以去<code>maven.aliyun.com</code>去查看对应版本pom文件是否存在</li>
@@ -524,20 +524,5 @@
   }
 </script>
 
-<script type="text/x-mathjax-config">
-    MathJax.Hub.Config({
-        tex2jax: {
-            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
-            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-            processEscapes: true
-        }
-    });
-    MathJax.Hub.Queue(function() {
-        var all = MathJax.Hub.getAllJax();
-        for (var i = 0; i < all.length; ++i)
-            all[i].SourceElement().parentNode.className += ' has-jax';
-    });
-</script>
-<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 </body>
 </html>
