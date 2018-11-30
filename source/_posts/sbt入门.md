@@ -113,7 +113,7 @@ libraryDependencies ++= Seq(
 1. 将数据源改为`maven.oschina.com`。此数据源已经失效
 2. 将`sbt.boot.properties`中的`https`改为`http`。未生效
 3. 在`sbt`的`vm`中配置`-Dsbt.override.build.repos=true`。此方法效果和`-Dsbt.repository.config=D:/ProgramFile/sbt/conf/repository.properties`一致，前提是需要配置数据源
-4. 最笨方案，下载jar包，放到本地仓库`C:\Users\suning\.ivy2\cache`
+4. 最笨方案，下载jar包，放到本地仓库`C:\Users\sustcoder\.ivy2\cache`
 
 ### 修改成阿里云数据源后依旧下载失败
 

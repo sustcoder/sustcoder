@@ -21,7 +21,11 @@ category: [streaming]
 - 修改app 反序列化导致checkpoint失效
 - spark.streaming.concurrentJobs大于1时会丢数据的问题
 - 如果一个子RDD由两个父RDD生成，那么在迭代过程中是怎样完成的
--  Spark Streaming 的 JobSet, Job，与 Spark Core 的 Job, Stage, TaskSet, Task 这几个概念
+- Spark Streaming 的 JobSet, Job，与 Spark Core 的 Job, Stage, TaskSet, Task 这几个概念
 - meta信息是timer信息吗？ batch时间取值怎么取的
 - batch 时间来向 `ReceiverTracker` 查询得到划分到本 batch 的块数据 meta 信息
+- core的job和streaming的job区别
+- driver的定义，excutor的具体执行：reciever
+- task与job关系
+- 完整 checkpoint 的方式，和  WAL 的方式区别
 

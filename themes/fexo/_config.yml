@@ -1,6 +1,6 @@
 # Blog info
 blog_name: Sustcoder
-slogan: Find the bug of the world
+slogan: Learn through the official website and source code
 url: https://sustcoder.github.io/
 
 # Set avatar (Absolute url and relative url)
@@ -178,6 +178,7 @@ about:
   - type: me
     icon: icon-user
     text_value:
+    - "建立自己的知识体系，完善解决问题的手法，掌握学习新东西的方法"
     - "good good study day day up"
     - "开发工程师，常用 java / scala / spark."
   - type: Github
