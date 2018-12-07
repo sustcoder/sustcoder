@@ -1,6 +1,6 @@
 # Blog info
 blog_name: Sustcoder
-slogan: Learn through the official website and source code
+slogan: Learn by official website and source code
 url: https://sustcoder.github.io/
 
 # Set avatar (Absolute url and relative url)
@@ -16,15 +16,15 @@ home_nav:
   - name: Blog
     url: /blog
     target_blank: false #不在新页面打开
-  - name: Project
-    url: /project/
-    target_blank: true #在新页面打开
   - name: Github
     url: https://github.com/sustcoder
-    target_blank: true
+    target_blank: true #在新页面打开
   - name: Oschina
     url: http://my.oschina.net/freelili
     target_blank: true
+  - name: About
+    url: /about/
+    target_blank: false 
 
 # config page nav
 page_nav:
@@ -122,7 +122,7 @@ init_page_content: HOME_NAV  # HOME_NAV | POST
 # =========================================================
 # Stats
 google_analytics:
-baidu_analytics: 57e94d016e201fba3603a8a2b0263af0
+baidu_analytics: f1cc8b0edce213e23b90ab65ff3c30ff
 
 # Comment service
 disqus_shortname: forsigner
@@ -163,7 +163,7 @@ valine:
   placeholder: Just go go # comment box placeholder
   avatar: mm # gravatar style
   guest_info: nick,mail,link # custom comment header
-  pageSize: 10 # pagination size
+  pageSize: 100 # pagination size
 
 
 
@@ -178,7 +178,7 @@ about:
   - type: me
     icon: icon-user
     text_value:
-    - "建立自己的知识体系，完善解决问题的手法，掌握学习新东西的方法"
+    - "建立知识体系，完善解决问题手法，掌握学习新东西方法"
     - "good good study day day up"
     - "开发工程师，常用 java / scala / spark."
   - type: Github
@@ -189,7 +189,7 @@ about:
   - type: weibo
     icon: icon-weibo
     text_key: oschina
-    text_value: "@forsigner"
+    text_value: "@freeli"
     text_value_url: http://my.oschina.net/freelili
   - type: mail
     icon: icon-mail
