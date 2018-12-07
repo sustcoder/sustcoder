@@ -15,7 +15,7 @@ category: [spark]
 
 1. ![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82A.tmp.jpg)[DAG定义](https://sustcoder.github.io/2018/12/01/sparkStreaming-sourceCodeAnalysis_DAG/)
 2. ![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsC3C6.tmp.jpg)[Job动态生成](https://sustcoder.github.io/2018/12/03/sparkStreaming-sourceCodeAnalysis_job/)
-3. ![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wps230.tmp.jpg)[数据的产生与导入](https://sustcoder.github.io/2018/12/09/sparkStreaming-sourceCodeAnalysis_dataInputOutput/)
+3. ![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wps230.tmp.jpg)[数据的产生与导入](https://sustcoder.github.io/2018/12/09/sparkStreaming-sourceCodeAnalysis_DataInputOutput/)
 4. ![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wps614F.tmp.jpg)[容错](https://sustcoder.github.io/2018/12/12/sparkStreaming-sourceCodeAnalysis_faultTolerance/)
 
 ![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/DAG.jpg)
