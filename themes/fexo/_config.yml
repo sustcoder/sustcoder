@@ -60,11 +60,11 @@ toolbox:
 
 search_slogan:
   isShow: true # true|fase
-  text: Can you find the bug of world ~
+  text: find what you want ~
 
 link_slogan:
   isShow: true # true|fase
-  text: 交换友链可以邮件 forsigner@gmail.com
+  text: 交换友链可以邮件 liyanzhaog@gmail.com
 
 
 # set backtop show or hide
