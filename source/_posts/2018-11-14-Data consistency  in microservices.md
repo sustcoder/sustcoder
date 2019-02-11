@@ -3,7 +3,6 @@ title: 微服务架构中的数据一致性
 subtitle: 
 description: 
 keywords: [microservices]
-author: liyz
 date: 2018-11-14
 tags: [translate,microservices]
 category: [translate]

@@ -178,9 +178,8 @@ about:
   - type: me
     icon: icon-user
     text_value:
-    - "建立知识体系，完善解决问题手法，掌握学习新东西方法"
     - "good good study day day up"
-    - "开发工程师，常用 java / scala / spark."
+    - "开发工程师，常用 java / scala / spark"
   - type: Github
     icon: icon-github
     text_key: Github
@@ -193,8 +192,8 @@ about:
     text_value_url: http://my.oschina.net/freelili
   - type: mail
     icon: icon-mail
-    text_key: Gmail
-    text_value: "liyanzhaog@gmail.com"
+    text_key: Mail
+    text_value: "1114673579@qq.com"
   - type: location
     icon: icon-location
     text_value: 北京

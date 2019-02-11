@@ -3,7 +3,6 @@ title: BitMap的JAVA实现
 subtitle: 用java实现bitMap
 description: 用java实现bitMap
 keywords: [java,bitMap]
-author: liyz
 date: 2018-10-23
 tags: [algorithm,java]
 category: [algorithm]

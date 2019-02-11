@@ -3,7 +3,6 @@ title: spark集群环境搭建
 subtitle: spark on yarn
 description: yarn环境搭建spark
 keywords: [spark,yarn,环境,搭建]
-author: liyz
 date: 2018-09-28 15:27:04
 tags: [spark,环境]
 category: [spark]

@@ -3,7 +3,6 @@ title: sparkStreaming源码解析之DAG定义
 subtitle: sparkStream的DAG定义源码解析
 description: sparkStream的DAG定义源码解析
 keywords: [spark,streaming,源码,DAG]
-author: liyz
 date: 2018-12-01
 tags: [spark,源码解析]
 category: [spark]

@@ -3,7 +3,6 @@ title: spark环境搭建杂记
 subtitle: 复盘总结
 description: 
 keywords: [复盘]
-author: liyz
 date: 2018-10-20
 tags: [replay]
 category: [replay]

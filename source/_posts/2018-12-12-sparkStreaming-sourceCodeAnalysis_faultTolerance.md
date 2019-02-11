@@ -3,7 +3,6 @@ title: sparkStreaming源码解析之容错
 subtitle: sparkStream的数据容错机制
 description: sparkStream的数据容错思维脑图
 keywords: [spark,streaming,源码,容错]
-author: liyz
 date: 2018-12-12
 tags: [spark,源码解析]
 category: [spark]

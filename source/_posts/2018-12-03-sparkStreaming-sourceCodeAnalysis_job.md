@@ -3,7 +3,6 @@ title: sparkStreaming源码解析之Job动态生成
 subtitle: sparkStream的Job动态生成思维脑图
 description: sparkStream的Job动态生成思维脑图
 keywords: [spark,streaming,源码,JOB]
-author: liyz
 date: 2018-12-03
 tags: [spark,源码解析]
 category: [spark]

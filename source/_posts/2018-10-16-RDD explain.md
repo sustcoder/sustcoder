@@ -3,7 +3,6 @@ title: RDD详解
 subtitle: 
 description: 
 keywords: [spark,RDD,解析]
-author: liyz
 date: 2018-10-16 17:27:04
 tags: [spark,RDD]
 category: [spark]
@@ -308,19 +307,30 @@ Shuffle 依赖的对应实现为`ShuffleDependency` 类,其实现比较复杂，
 
 Apache Spark 采用的是第二种办法，但保存数据的方法可能与想象中的会有所不同，**Spark 把计算链从 Shuffle 依赖处断开**，划分成不同的**阶段（Stage）**，阶段之间存在依赖关系（其实就是 Shuffle 依赖），从而可以构建一张不同阶段之间的**有向无环图（DAG）**。
 
-## 2.3 RDD 计算函数
+## 2.3 RDD lineage
 
-todo compute
+RDD的逻辑执行计划和物理[执行计划详解...](https://github.com/lw-lin/CoolplaySpark/blob/master/Spark%20Streaming%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/1.1%20DStream%2C%20DStreamGraph%20%E8%AF%A6%E8%A7%A3.md)
+
+**RDD逻辑执行计划**
+
+RDD是通过一系列transformation操作进行计算的，而这些transformation操作形成的图就是DAG，也就是逻辑执行计划
+
+**RDD物理执行计划**
+
+根据RDD延迟计算特性，其真正在触发计算是在有output时发生的，outPutRdd上记录了其上级依赖的RDD，依次向前直到碰到inputRdd，这个通过依赖反向去获取RDD的过程形成的就是物理执行计划。
+
+**逻辑执行计划所包含的RDD和物理执行计划所包含的RDD不一定是对等的**
+
+可以通过`toDebugString`查看RDD的lineage
+
+## 2.4 RDD 计算函数
+
+[前往查看详情...](https://github.com/sustcoder/spark-tutorial/blob/master/src/main/scala/com/liyz/scala/starter/CollectionFun.scala)
 
 
-## 2.4 RDD 分区器
+## 2.5 RDD 分区器
 
-todo partiner
-
-## 2.5 RDD 血缘
-
-todo lineage
-
+[前往查看详情...](https://sustcoder.github.io/2018/12/10/sparkCore-sourceCodeAnalysis_partitioner/)
 
 
 

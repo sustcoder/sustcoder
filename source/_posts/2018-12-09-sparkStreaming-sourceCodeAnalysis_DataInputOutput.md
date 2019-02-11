@@ -3,7 +3,6 @@ title: sparkStreaming源码解析之数据的产生与导入
 subtitle: sparkStream的数据的产生与导入
 description: sparkStream的数据的产生与导入思维脑图
 keywords: [spark,streaming,源码,数据生成,数据导出]
-author: liyz
 date: 2018-12-09
 tags: [spark,源码解析]
 category: [spark]
