@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>windows下JDK版本切换脚本 | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="tools,jdk,思考," />
+  
+
+  <meta name="description" content="jdk版本切换">
+<meta name="keywords" content="jdk,版本,切换">
+<meta property="og:type" content="article">
+<meta property="og:title" content="windows下JDK版本切换脚本">
+<meta property="og:url" content="https://sustcoder.github.io/2018/09/18/2018-09-18-windows下JDK版本切换脚本/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="jdk版本切换">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/tool/script/jdkVSwitch.png">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/tool/script/jdkPath.png">
+<meta property="og:updated_time" content="2019-02-11T08:03:01.479Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="windows下JDK版本切换脚本">
+<meta name="twitter:description" content="jdk版本切换">
+<meta name="twitter:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/tool/script/jdkVSwitch.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#初衷"><span class="toc-text">初衷</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#research过程"><span class="toc-text">research过程</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#脚本"><span class="toc-text">脚本</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#运行截图"><span class="toc-text">运行截图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#脚本内容"><span class="toc-text">脚本内容</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#脚本下载"><span class="toc-text">脚本下载</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#注意事项"><span class="toc-text">注意事项</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2018-09-18-windows下JDK版本切换脚本" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">windows下JDK版本切换脚本</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.09.18</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/tools/">tools</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2018/09/18/2018-09-18-windows下JDK版本切换脚本/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="初衷"><a href="#初衷" class="headerlink" title="初衷"></a>初衷</h1><p>前几天在一个技术交流群中看到技术人应该怎样去扩展自己的知识，去发现新的技术。其中有一条就是：<strong>当你对当前的工作感到厌倦的时候就应该去思考是否可以对其进行优化</strong>，比如我在重复的打开环境变量，修改JDK版本号的时候，就为每天都要进行此操作而感到厌倦，以至于内心开始拒绝去切换JDK版本，拒绝去做需要在另一个版本上的工作。</p>
+<h1 id="research过程"><a href="#research过程" class="headerlink" title="research过程"></a>research过程</h1><p>首先我搜索的关键字是<code>jdk版本切换</code>，其搜索结果都是怎样设置多JDK版本，怎样去修改环境变量。但是这些结果并不是我想要的，不过我确实是想要切换JDK版本啊，为什么没搜到结果呢。</p>
+<p><strong>当搜索不到结果的时候，首先考虑我们的搜索关键字是否准备</strong></p>
+<p>再次思考，我其实不是想切换JDK版本，而是想更方便的切换JDK版本，怎样会更方便呢，比如只点一个按钮即可。那其实可以通过脚本去实现这个功能，所以我的搜索条件变成了<code>windos切换JDK版本脚本</code>然后就搜索到了想要的结果。</p>
+<h1 id="脚本"><a href="#脚本" class="headerlink" title="脚本"></a>脚本</h1><h2 id="运行截图"><a href="#运行截图" class="headerlink" title="运行截图"></a>运行截图</h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/tool/script/jdkVSwitch.png" alt="运行截图"></p>
+<h2 id="脚本内容"><a href="#脚本内容" class="headerlink" title="脚本内容"></a>脚本内容</h2><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">@<span class="built_in">echo</span> off</span><br><span class="line"></span><br><span class="line">rem --- Base Config 配置JDK的安装目录 ---</span><br><span class="line">:init </span><br><span class="line"><span class="built_in">set</span> JAVA_HOME_1_8=C:\Program Files\Java\jdk8</span><br><span class="line"><span class="built_in">set</span> JRE_HOME_1_8=C:\Program Files\Java\jre8</span><br><span class="line"></span><br><span class="line"><span class="built_in">set</span> JAVA_HOME_1_7=C:\Program Files\Java\jdk7</span><br><span class="line"><span class="built_in">set</span> JRE_HOME_1_7=C:\Program Files\Java\jre7</span><br><span class="line">:start </span><br><span class="line"><span class="built_in">echo</span> 当前使用的JDK 版本: </span><br><span class="line">java -version </span><br><span class="line"><span class="built_in">echo</span>. </span><br><span class="line"><span class="built_in">echo</span> ============================================= </span><br><span class="line"><span class="built_in">echo</span> jdk版本列表: </span><br><span class="line"><span class="built_in">echo</span>  jdk1.8 </span><br><span class="line"><span class="built_in">echo</span>  jdk1.7</span><br><span class="line"><span class="built_in">echo</span> ============================================= </span><br><span class="line"></span><br><span class="line">:select</span><br><span class="line"><span class="built_in">set</span> /p opt=请输入JDK版本。[7代表jdk1.7],[8代表jdk1.8]： </span><br><span class="line"><span class="keyword">if</span> %opt%==8 (</span><br><span class="line">    <span class="built_in">set</span> TARGET_JAVA_HOME=%JAVA_HOME_1_8%</span><br><span class="line">	<span class="built_in">set</span> TARGET_JRE_HOME=%JRE_HOME_1_8%</span><br><span class="line">)</span><br><span class="line"><span class="keyword">if</span> %opt%==7 (</span><br><span class="line">    <span class="built_in">set</span> TARGET_JAVA_HOME=%JAVA_HOME_1_7%</span><br><span class="line">	<span class="built_in">set</span> TARGET_JRE_HOME=%JRE_HOME_1_7%</span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> 当前选择的Java路径:</span><br><span class="line"><span class="built_in">echo</span> JAVE_HOME:%TARGET_JAVA_HOME%</span><br><span class="line"><span class="built_in">echo</span> JRE_HOME:%TARGET_JRE_HOME%</span><br><span class="line"></span><br><span class="line">wmic ENVIRONMENT <span class="built_in">where</span> <span class="string">"name='JAVA_HOME'"</span> delete</span><br><span class="line">wmic ENVIRONMENT create name=<span class="string">"JAVA_HOME"</span>,username=<span class="string">"&lt;system&gt;"</span>,VariableValue=<span class="string">"%TARGET_JAVA_HOME%"</span></span><br><span class="line"></span><br><span class="line">wmic ENVIRONMENT <span class="built_in">where</span> <span class="string">"name='JRE_HOME'"</span> delete</span><br><span class="line">wmic ENVIRONMENT create name=<span class="string">"JRE_HOME"</span>,username=<span class="string">"&lt;system&gt;"</span>,VariableValue=<span class="string">"%TARGET_JRE_HOME%"</span></span><br><span class="line"></span><br><span class="line">rem -- refresh env ---</span><br><span class="line">call RefreshEnv</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> 请按任意键退出!   </span><br><span class="line">pause&gt;nul</span><br><span class="line"></span><br><span class="line">@<span class="built_in">echo</span> on</span><br></pre></td></tr></table></figure>
+<h2 id="脚本下载"><a href="#脚本下载" class="headerlink" title="脚本下载"></a>脚本下载</h2><ul>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/tool/script/RefreshEnv.exe" target="_blank" rel="noopener">RefreshEnv.exe</a></li>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/tool/script/switchVersion.bat" target="_blank" rel="noopener">switchVersion.bat</a></li>
+</ul>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><ul>
+<li>是否需要配置<code>JRE_HOME</code>和安装JDK的路径有关系，下图是我的安装路径</li>
+</ul>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/tool/script/jdkPath.png" alt="jdk安装路径"> </p>
+<ul>
+<li>需要修改<code>JAVA_HOME</code>的值为你对应的JDK安装路径</li>
+<li>需要以管理员权限运行脚本</li>
+</ul>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/09/13/2018-09-13-sbt入门/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2018/09/27/2018-09-27-YARN 内存参数详解/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2018/09/18/2018-09-18-windows下JDK版本切换脚本/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

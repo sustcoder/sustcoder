@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>Spark Streaming基于kafka获取数据 | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="spark,kafka," />
+  
+
+  <meta name="description" content="kafkaRDD计算解析">
+<meta name="keywords" content="spark,kafkaRDD,direct">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Streaming基于kafka获取数据">
+<meta property="og:url" content="https://sustcoder.github.io/2019/01/08/2019-01-08-Spark-Streaming-kafka-direct/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="kafkaRDD计算解析">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/kafkareceiver.png">
+<meta property="og:updated_time" content="2019-01-10T02:22:41.685Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark Streaming基于kafka获取数据">
+<meta name="twitter:description" content="kafkaRDD计算解析">
+<meta name="twitter:image" content="http://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/kafkareceiver.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Receiver方式"><span class="toc-text">Receiver方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#处理流程"><span class="toc-text">处理流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#receiver缺点"><span class="toc-text">receiver缺点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Direct方式"><span class="toc-text">Direct方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#实现"><span class="toc-text">实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#特点"><span class="toc-text">特点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#模式比对"><span class="toc-text">模式比对</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#direct源码"><span class="toc-text">direct源码</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2019-01-08-Spark-Streaming-kafka-direct" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">Spark Streaming基于kafka获取数据</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.01.08</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/spark/">spark</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2019/01/08/2019-01-08-Spark-Streaming-kafka-direct/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h2 id="Receiver方式"><a href="#Receiver方式" class="headerlink" title="Receiver方式"></a>Receiver方式</h2><h3 id="处理流程"><a href="#处理流程" class="headerlink" title="处理流程"></a>处理流程</h3><p>实际上做kafka receiver的时候，通过receiver来获取数据，这个时候，kafka receiver是使用的kafka高层次的comsumer api来实现的。receiver会从kafka中获取数据，然后把它存储到我们具体的Executor内存中。然后Spark streaming也就是driver中，会根据这获取到的数据，启动job去处理。</p>
+<p><img src="http://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/kafkareceiver.png" alt="kafkareceiver"></p>
+<h3 id="receiver缺点"><a href="#receiver缺点" class="headerlink" title="receiver缺点"></a>receiver缺点</h3><ol>
+<li>已经拉取的数据消费失败后，会导致数据丢失。此问题虽然可以通过WAL方式或者Memory_and_Disc2解决，但是存在耗时等问题</li>
+<li>使用了kafka consumer的高阶API，KafkaInputDStream的实现和我们常用的consumer实现类似，需要zk额外的记录偏移量</li>
+</ol>
+<h2 id="Direct方式"><a href="#Direct方式" class="headerlink" title="Direct方式"></a>Direct方式</h2><h3 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h3><p>在使用kafka接收消息时，都是调用了KafkaUtils里面createStream的不同实现。</p>
+<p>receiver方式的实现方式如下。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 创建一个inputStream，从kafkaBrokers上拉去消息，需要传入zk集群信息，默认会复制到另一个excutor</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">createStream</span></span>(</span><br><span class="line">    ssc: <span class="type">StreamingContext</span>,<span class="comment">// spark上下文</span></span><br><span class="line">    zkQuorum: <span class="type">String</span>,<span class="comment">// zk集群信息（hostname:port,hostname:port...）</span></span><br><span class="line">    groupId: <span class="type">String</span>,<span class="comment">// 当前consumer所属分组</span></span><br><span class="line">    topics: <span class="type">Map</span>[<span class="type">String</span>, <span class="type">Int</span>],<span class="comment">// Map[topic_name,numPartitions],topic消费对应的分区</span></span><br><span class="line">    storageLevel: <span class="type">StorageLevel</span> = <span class="type">StorageLevel</span>.<span class="type">MEMORY_AND_DISK_SER_2</span></span><br><span class="line">  ): <span class="type">ReceiverInputDStream</span>[(<span class="type">String</span>, <span class="type">String</span>)] = &#123;</span><br><span class="line">  <span class="keyword">val</span> kafkaParams = <span class="type">Map</span>[<span class="type">String</span>, <span class="type">String</span>](</span><br><span class="line">    <span class="string">"zookeeper.connect"</span> -&gt; zkQuorum, <span class="string">"group.id"</span> -&gt; groupId,</span><br><span class="line">    <span class="string">"zookeeper.connection.timeout.ms"</span> -&gt; <span class="string">"10000"</span>)</span><br><span class="line">    <span class="comment">// 写日志</span></span><br><span class="line"> <span class="keyword">val</span> walEnabled = <span class="type">WriteAheadLogUtils</span>.enableReceiverLog(ssc.conf)</span><br><span class="line">    <span class="comment">// 组装成KafkaInputDStream</span></span><br><span class="line">    <span class="keyword">new</span> <span class="type">KafkaInputDStream</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">U</span>, <span class="type">T</span>](</span><br><span class="line">          ssc, kafkaParams, topics, walEnabled, 	storageLevel)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>direct方式实现消费</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * 摒弃了高阶的kafkaConsumerAPI直接从kafkaBrokers获取信息，可以保证每条消息只被消费一次</span></span><br><span class="line"><span class="comment">   * 特点：</span></span><br><span class="line"><span class="comment">   * - No receivers：没有receivers,直接从kafka拉取数据</span></span><br><span class="line"><span class="comment">   * - Offsets：不用zookeeper存储offsets,偏移量是通过stream自己跟踪记录的，可以通过HasOffsetRanges获取offset</span></span><br><span class="line"><span class="comment">   * - Failure Recovery故障恢复：需要开启sparkContext的checkpoint功能</span></span><br><span class="line"><span class="comment">   * - End-to-end semantics最终一致性：保证消息被消费且只消费一次</span></span><br><span class="line"><span class="comment">   * @return DStream of (Kafka message key, Kafka message value)</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">createDirectStream</span></span>[</span><br><span class="line">    <span class="type">K</span>: <span class="type">ClassTag</span>,</span><br><span class="line">    <span class="type">V</span>: <span class="type">ClassTag</span>,</span><br><span class="line">    <span class="type">KD</span> &lt;: <span class="type">Decoder</span>[<span class="type">K</span>]: <span class="type">ClassTag</span>,</span><br><span class="line">    <span class="type">VD</span> &lt;: <span class="type">Decoder</span>[<span class="type">V</span>]: <span class="type">ClassTag</span>] (</span><br><span class="line">      ssc: <span class="type">StreamingContext</span>,</span><br><span class="line">      <span class="comment">// brokers列表，Map("metadata.broker.list" -&gt; brokers)</span></span><br><span class="line">      kafkaParams: <span class="type">Map</span>[<span class="type">String</span>, <span class="type">String</span>],</span><br><span class="line">      topics: <span class="type">Set</span>[<span class="type">String</span>]</span><br><span class="line">  ): <span class="type">InputDStream</span>[(<span class="type">K</span>, <span class="type">V</span>)] = &#123;</span><br><span class="line">    <span class="keyword">val</span> messageHandler = (mmd: <span class="type">MessageAndMetadata</span>[<span class="type">K</span>, <span class="type">V</span>]) =&gt; (mmd.key, mmd.message)</span><br><span class="line">    <span class="keyword">val</span> kc = <span class="keyword">new</span> <span class="type">KafkaCluster</span>(kafkaParams)</span><br><span class="line">    <span class="keyword">val</span> fromOffsets = getFromOffsets(kc, kafkaParams, topics)</span><br><span class="line">    <span class="keyword">new</span> <span class="type">DirectKafkaInputDStream</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">KD</span>, <span class="type">VD</span>, (<span class="type">K</span>, <span class="type">V</span>)](</span><br><span class="line">      ssc, kafkaParams, fromOffsets, messageHandler)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h3><ol>
+<li>Direct的方式是会直接操作kafka底层的元数据信息，这样如果计算失败了，可以把数据重新读一下，重新处理。即数据一定会被处理。拉数据，是RDD在执行的时候直接去拉数据。</li>
+<li>由于直接操作的是kafka，kafka就相当于你底层的文件系统。这个时候能保证严格的事务一致性，即一定会被处理，而且只会被处理一次。而Receiver的方式则不能保证，因为Receiver和ZK中的数据可能不同步，Spark Streaming可能会重复消费数据。而Direct api直接是操作kafka的，spark streaming自己负责追踪消费这个数据的偏移量或者offset，并且自己保存到checkpoint，所以它的数据一定是同步的，一定不会被重复。</li>
+<li>底层是直接读数据，没有所谓的Receiver，直接是周期性(Batch Intervel)的查询kafka，处理数据的时候，我们会使用基于kafka原生的Consumer api来获取kafka中特定范围(offset范围)中的数据，这个时候，Direct Api访问kafka带来的一个显而易见的性能上的好处就是，如果你要读取多个partition，Spark也会创建RDD的partition，这个时候RDD的partition和kafka的partition是一致的。所以增加kafka中的topic的partition数量可以提高并行度。</li>
+<li>偏移量：默认从最新偏移量(<code>largest</code>)开始消费。如果设置了<code>auto.offset.reset</code>参数值为<code>smallest</code>将从最小偏移处开始消费。</li>
+</ol>
+<p>checkpoint恢复后，如果数据累积太多处理不过来，怎么办?</p>
+<p>1）限速，通过<code>spark.streaming.kafka.maxRatePerPartition</code>参数配置</p>
+<p>2）增强机器的处理能力</p>
+<p>3）放到数据缓冲池中。</p>
+<h2 id="模式比对"><a href="#模式比对" class="headerlink" title="模式比对"></a>模式比对</h2><ol>
+<li>.简化并行性：无需创建多个输入Kafka流并且结合它们。 使用directStream，Spark Streaming将创建与要消费的Kafkatopic中partition分区一样多的RDD分区，这将从Kafka并行读取数据。 因此，在Kafka和RDD分区之间存在一对一映射，这更容易理解和调整。</li>
+<li>效率：在第一种方法中实现零数据丢失需要将数据存储在预写日志中，该日志进一步复制数据。 这实际上是低效的，因为数据有效地被复制两次 - 一次是Kafka，另一次是写入提前日志。 第二种方法消除了问题，因为没有接收器(zookeeper)，因此不需要预写日志。 将元数据信息直接保存在kafka中，可以从Kafka恢复消息。</li>
+<li>Exactly-once语义：第一种方法使用Kafka的高级API在Zookeeper中存储消耗的偏移量。这是传统上消费Kafka数据的方式。虽然这种方法（与预写日志结合）可以确保零数据丢失（即至少一次语义），但是一些记录在一些故障下可能被消耗两次。这是因为Spark Streaming可靠接收的数据与Zookeeper跟踪的偏移之间存在不一致。因此，在第二种方法中，我们使用简单的Kafka API,不使用Zookeeper的。偏移由Spark Streaming在其检查点内跟踪。这消除了Spark Streaming和Zookeeper / Kafka之间的不一致，所以每个记录被Spark Streaming有效地精确接收一次，尽管失败了。为了实现输出结果的一次性语义，将数据保存到外部数据存储的输出操作必须是幂等的，或者是保存结果和偏移量的原子事务。</li>
+</ol>
+<h2 id="direct源码"><a href="#direct源码" class="headerlink" title="direct源码"></a>direct源码</h2><p>获取offset集合，然后创建<code>DirectKafkaInputDStream</code>对象</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">//  class KafkaUtils  </span></span><br><span class="line"><span class="keyword">private</span>[kafka] <span class="function"><span class="keyword">def</span> <span class="title">getFromOffsets</span></span>(</span><br><span class="line">      kc: <span class="type">KafkaCluster</span>,</span><br><span class="line">      kafkaParams: <span class="type">Map</span>[<span class="type">String</span>, <span class="type">String</span>],</span><br><span class="line">      topics: <span class="type">Set</span>[<span class="type">String</span>]</span><br><span class="line">    ): <span class="type">Map</span>[<span class="type">TopicAndPartition</span>, <span class="type">Long</span>] = &#123;</span><br><span class="line">    <span class="comment">// createDirectStream方法kafkaParams入参：消费起始位置</span></span><br><span class="line">    <span class="keyword">val</span> reset = kafkaParams.get(<span class="string">"auto.offset.reset"</span>).map(_.toLowerCase(<span class="type">Locale</span>.<span class="type">ROOT</span>))</span><br><span class="line">    <span class="keyword">val</span> result = <span class="keyword">for</span> &#123;</span><br><span class="line">      topicPartitions &lt;- kc.getPartitions(topics).right</span><br><span class="line">      leaderOffsets &lt;- (<span class="keyword">if</span> (reset == <span class="type">Some</span>(<span class="string">"smallest"</span>)) &#123;</span><br><span class="line">        <span class="comment">// smallest表示最小offset,即从topic的开始位置消费所有消息.</span></span><br><span class="line">        kc.getEarliestLeaderOffsets(topicPartitions)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// largest表示接受接收最大的offset(即最新消息),</span></span><br><span class="line">        kc.getLatestLeaderOffsets(topicPartitions)</span><br><span class="line">      &#125;).right</span><br><span class="line">      <span class="comment">// for循环中的 yield 会把当前的元素记下来，保存在集合中，循环结束后将返回该集合。Scala中for循环是有返回值的。如果被循环的是Map，返回的就是Map，被循环的是List，返回的就是List，以此类推。</span></span><br><span class="line">    &#125; <span class="keyword">yield</span> &#123;</span><br><span class="line">      <span class="comment">// 存放for循环的计算结果：map[TopicAndPartition, LeaderOffset]</span></span><br><span class="line">      leaderOffsets.map &#123; <span class="keyword">case</span> (tp, lo) =&gt;</span><br><span class="line">          (tp, lo.offset)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">KafkaCluster</span>.checkErrors(result)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">createDirectStream</span></span>&#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="type">DirectKafkaInputDStream</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">KD</span>, <span class="type">VD</span>, (<span class="type">K</span>, <span class="type">V</span>)](</span><br><span class="line">      ssc, kafkaParams, fromOffsets, messageHandler)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>DirectKafkaInputDStream.compute中创建KafkaRDD，并将offsets信息发送给inputStreamTracker.</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(validTime: <span class="type">Time</span>): <span class="type">Option</span>[<span class="type">KafkaRDD</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">U</span>, <span class="type">T</span>, <span class="type">R</span>]] = &#123;</span><br><span class="line">    <span class="comment">// Map[TopicAndPartition, LeaderOffset] topic的partiton对应偏移量集合</span></span><br><span class="line">    <span class="keyword">val</span> untilOffsets = clamp(latestLeaderOffsets(maxRetries))</span><br><span class="line">    <span class="comment">// 消息处理函数val messageHandler = (mmd: MessageAndMetadata[K, V]) =&gt; (mmd.key, mmd.message)</span></span><br><span class="line">    <span class="comment">// 创建KafkaRDD</span></span><br><span class="line">    <span class="keyword">val</span> rdd = <span class="type">KafkaRDD</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">U</span>, <span class="type">T</span>, <span class="type">R</span>](</span><br><span class="line">      context.sparkContext, kafkaParams, currentOffsets, untilOffsets, messageHandler)</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 将topic和partition信息包装成OffsetRange对象中</span></span><br><span class="line">    <span class="keyword">val</span> offsetRanges = currentOffsets.map &#123; <span class="keyword">case</span> (tp, fo) =&gt;</span><br><span class="line">      <span class="keyword">val</span> uo = untilOffsets(tp)</span><br><span class="line">      <span class="type">OffsetRange</span>(tp.topic, tp.partition, fo, uo.offset)</span><br><span class="line">    &#125;</span><br><span class="line">   </span><br><span class="line"> 	<span class="comment">// 将OffsetRange报告给InputInfoTracker记录</span></span><br><span class="line">    ssc.scheduler.inputInfoTracker.reportInfo(validTime, inputInfo)</span><br><span class="line">    currentOffsets = untilOffsets.map(kv =&gt; kv._1 -&gt; kv._2.offset)</span><br><span class="line">    <span class="type">Some</span>(rdd)</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>KafkaRDD计算时直接从kafka上拉取数据</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(thePart: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">R</span>] = &#123;</span><br><span class="line">    <span class="keyword">val</span> part = thePart.asInstanceOf[<span class="type">KafkaRDDPartition</span>]</span><br><span class="line">    <span class="keyword">new</span> <span class="type">KafkaRDDIterator</span>(part, context)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">KafkaRDDIterator</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">      part: <span class="type">KafkaRDDPartition</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">      context: <span class="type">TaskContext</span></span>) <span class="keyword">extends</span> <span class="title">NextIterator</span>[<span class="type">R</span>] </span>&#123;</span><br><span class="line">	<span class="comment">// 根据metadata.broker.list初始化KafkaCluster，用来连接到kafka</span></span><br><span class="line">    <span class="keyword">val</span> kc = <span class="keyword">new</span> <span class="type">KafkaCluster</span>(kafkaParams)</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">var</span> requestOffset = part.fromOffset</span><br><span class="line">    <span class="keyword">var</span> iter: <span class="type">Iterator</span>[<span class="type">MessageAndOffset</span>] = <span class="literal">null</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">// 提供一个最优的host优先访问，最大化的减少重试次数</span></span><br><span class="line">    <span class="keyword">val</span> consumer:<span class="type">SimpleConsumer</span> = &#123;</span><br><span class="line">        <span class="comment">// 重试次数大于0</span></span><br><span class="line">      <span class="keyword">if</span> (context.attemptNumber &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        kc.connectLeader(part.topic, part.partition).fold(</span><br><span class="line">          errs =&gt; <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">SparkException</span>(</span><br><span class="line">            <span class="string">s"Couldn't connect to leader for topic <span class="subst">$&#123;part.topic&#125;</span> <span class="subst">$&#123;part.partition&#125;</span>: "</span> +</span><br><span class="line">              errs.mkString(<span class="string">"\n"</span>)),</span><br><span class="line">          consumer =&gt; consumer</span><br><span class="line">        )</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">// 不用重试，直接连接</span></span><br><span class="line">        kc.connect(part.host, part.port)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 创建请求拉取数据</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">fetchBatch</span></span>: <span class="type">Iterator</span>[<span class="type">MessageAndOffset</span>] = &#123;</span><br><span class="line">      <span class="keyword">val</span> req = <span class="keyword">new</span> <span class="type">FetchRequestBuilder</span>()</span><br><span class="line">        .addFetch(part.topic, part.partition, requestOffset, kc.config.fetchMessageMaxBytes)</span><br><span class="line">        .build()</span><br><span class="line">      <span class="keyword">val</span> resp = consumer.fetch(req)</span><br><span class="line">      <span class="comment">// 失败重试 </span></span><br><span class="line">      handleFetchErr(resp)</span><br><span class="line">      <span class="comment">// kafka may return a batch that starts before the requested offset</span></span><br><span class="line">      resp.messageSet(part.topic, part.partition)</span><br><span class="line">        .iterator</span><br><span class="line">        .dropWhile(_.offset &lt; requestOffset)</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 拉取失败，通知另一个rdd重新尝试</span></span><br><span class="line">    <span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">handleFetchErr</span></span>(resp: <span class="type">FetchResponse</span>) &#123;</span><br><span class="line">      <span class="keyword">if</span> (resp.hasError) &#123;</span><br><span class="line">   		<span class="comment">// Let normal rdd retry sort out reconnect attempts</span></span><br><span class="line">        <span class="keyword">throw</span> <span class="type">ErrorMapping</span>.exceptionFor(err)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getNext</span></span>(): <span class="type">R</span> = &#123;</span><br><span class="line">      <span class="keyword">if</span> (iter == <span class="literal">null</span> || !iter.hasNext) &#123;</span><br><span class="line">          <span class="comment">// 拉取数据</span></span><br><span class="line">        iter = fetchBatch</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span> (!iter.hasNext) &#123;</span><br><span class="line">        assert(requestOffset == part.untilOffset, errRanOutBeforeEnd(part))</span><br><span class="line">        finished = <span class="literal">true</span></span><br><span class="line">        <span class="literal">null</span>.asInstanceOf[<span class="type">R</span>]</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="comment">// 遍历拉取到的数据</span></span><br><span class="line">        <span class="keyword">val</span> item = iter.next()</span><br><span class="line">        <span class="keyword">if</span> (item.offset &gt;= part.untilOffset) &#123;</span><br><span class="line">		  <span class="comment">// 如果当前item的偏移量大于需要拉取的最大偏移量则结束</span></span><br><span class="line">          finished = <span class="literal">true</span></span><br><span class="line">          <span class="literal">null</span>.asInstanceOf[<span class="type">R</span>]</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          requestOffset = item.nextOffset</span><br><span class="line">            <span class="comment">// 将拉取到的数据交由messageHandler处理</span></span><br><span class="line">          messageHandler(<span class="keyword">new</span> <span class="type">MessageAndMetadata</span>(</span><br><span class="line">            part.topic, part.partition, item.message, item.offset, keyDecoder, valueDecoder))</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过chekpoint的方式保存offset</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">// DStream中定义checkpoint的实现类</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DirectKafkaInputDStream</span> <span class="keyword">extends</span> <span class="title">InputDStream</span></span>&#123;</span><br><span class="line">   <span class="keyword">override</span> <span class="keyword">val</span> checkpointData =<span class="keyword">new</span> <span class="type">DirectKafkaInputDStreamCheckpointData</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DirectKafkaInputDStreamCheckpointData</span> <span class="keyword">extends</span> <span class="title">DStreamCheckpointData</span>(<span class="params">this</span>) </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">def</span> <span class="title">batchForTime</span></span>: mutable.<span class="type">HashMap</span>[<span class="type">Time</span>, <span class="type">Array</span>[(<span class="type">String</span>, <span class="type">Int</span>, <span class="type">Long</span>, <span class="type">Long</span>)]] = &#123;</span><br><span class="line">        <span class="comment">// 定义一个不可变数组保存offset信息</span></span><br><span class="line">      data.asInstanceOf[mutable.<span class="type">HashMap</span>[<span class="type">Time</span>, <span class="type">Array</span>[<span class="type">OffsetRange</span>.<span class="type">OffsetRangeTuple</span>]]]</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/12/20/2018-12-20-spark-sourceCode-run/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/01/11/2019-01-11-bloom-filter/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2019/01/08/2019-01-08-Spark-Streaming-kafka-direct/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

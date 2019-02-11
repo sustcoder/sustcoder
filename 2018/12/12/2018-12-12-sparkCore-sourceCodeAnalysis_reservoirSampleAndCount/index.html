@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>RangePartitioner实现算法reservoirSampleAndCount | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="spark,算法," />
+  
+
+  <meta name="description" content="sparkCore算法之reservoir">
+<meta name="keywords" content="spark,reservoir,水塘抽样">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RangePartitioner实现算法reservoirSampleAndCount">
+<meta property="og:url" content="https://sustcoder.github.io/2018/12/12/2018-12-12-sparkCore-sourceCodeAnalysis_reservoirSampleAndCount/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="sparkCore算法之reservoir">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-02-11T08:06:22.887Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="RangePartitioner实现算法reservoirSampleAndCount">
+<meta name="twitter:description" content="sparkCore算法之reservoir">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#简介"><span class="toc-text">简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#伪代码"><span class="toc-text">伪代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现概述"><span class="toc-text">实现概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现源码"><span class="toc-text">实现源码</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2018-12-12-sparkCore-sourceCodeAnalysis_reservoirSampleAndCount" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">RangePartitioner实现算法reservoirSampleAndCount</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.12.12</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/spark/">spark</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2018/12/12/2018-12-12-sparkCore-sourceCodeAnalysis_reservoirSampleAndCount/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>reservoir的作用是：<strong>在不知道文件总行数的情况下，如何从文件中随机的抽取一行？</strong>即是说如果最后发现文字档共有N行，则每一行被抽取的概率均为1/N？</p>
+<p>我们可以：定义取出的行号为choice，第一次直接以第一行作为取出行 choice ，而后第二次以二分之一概率决定是否用第二行替换 choice ，第三次以三分之一的概率决定是否以第三行替换 choice ……，以此类推。由上面的分析我们可以得出结论，<strong>在取第n个数据的时候，我们生成一个0到1的随机数p，如果p小于1/n，保留第n个数。大于1/n，继续保留前面的数。直到数据流结束，返回此数，算法结束。</strong></p>
+<p>这个问题的扩展就是：如何从未知或者很大样本空间随机地取k个数？亦即是说，如果档案共有N ≥ k行，则每一行被抽取的概率为k/N。</p>
+<p>　　根据上面（随机取出一元素）的分析，我们可以把上面的1/n变为k/n即可。思路为：<strong>在取第n个数据的时候，我们生成一个0到1的随机数p，如果p小于k/n，替换池中任意一个为第n个数。大于k/n，继续保留前面的数。直到数据流结束，返回此k个数。但是为了保证计算机计算分数额准确性，一般是生成一个0到n的随机数，跟k相比，道理是一样的。</strong></p>
+<h2 id="伪代码"><a href="#伪代码" class="headerlink" title="伪代码"></a><strong>伪代码</strong></h2><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">从S中抽取首k项放入「水塘」中</span><br><span class="line">对于每一个S[j]项（j ≥ k）：</span><br><span class="line">   随机产生一个范围0到j的整数r</span><br><span class="line">   若 r &lt; k 则把水塘中的第r项换成S[j]项</span><br></pre></td></tr></table></figure>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">  S has items to sample, R will contain the result</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="type">ReservoirSample</span>(<span class="type">S</span>[<span class="number">1.</span>.n], <span class="type">R</span>[<span class="number">1.</span>.k])</span><br><span class="line">  <span class="comment">// fill the reservoir array</span></span><br><span class="line">  <span class="keyword">for</span> i = <span class="number">1</span> to k</span><br><span class="line">      <span class="type">R</span>[i] := <span class="type">S</span>[i]</span><br><span class="line"> </span><br><span class="line">  <span class="comment">// replace elements with gradually decreasing probability</span></span><br><span class="line">  <span class="keyword">for</span> i = k+<span class="number">1</span> to n</span><br><span class="line">    j := random(<span class="number">1</span>, i)   <span class="comment">// important: inclusive range</span></span><br><span class="line">    <span class="keyword">if</span> j &lt;= k</span><br><span class="line">        <span class="type">R</span>[j] := <span class="type">S</span>[i]</span><br></pre></td></tr></table></figure>
+<h2 id="实现概述"><a href="#实现概述" class="headerlink" title="实现概述"></a>实现概述</h2><ol>
+<li>获取到需要抽样RDD分区的样本大小k和分区的所有KEY数组input</li>
+<li>初始化抽样结果集reservoir为分区前K个KEY值</li>
+<li>如果分区的总数小于预计样本大小k,则将当前分区的所有数据作为样本数据，否则到第四步</li>
+<li>遍历分区里所有Key组成的数组input</li>
+<li>生成随机需要替换input数组的下标，如果下标小于K则替换</li>
+<li>返回抽取的key值数组和当前分区的总数据量： (reservoir, l)</li>
+</ol>
+<h2 id="实现源码"><a href="#实现源码" class="headerlink" title="实现源码"></a>实现源码</h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Reservoir sampling implementation that also returns the input size.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * @param input:RDD的分区里面的key组成的Iterator</span></span><br><span class="line"><span class="comment">   * @param k :抽样大小=</span></span><br><span class="line"><span class="comment">   		val sampleSize = math.min(20.0 * partitions, 1e6)</span></span><br><span class="line"><span class="comment">   		val k=math.ceil(3.0 * sampleSize / rdd.partitions.length).toInt</span></span><br><span class="line"><span class="comment">   * @param seed random seed:选取随机数的种子</span></span><br><span class="line"><span class="comment">   * @return (samples, input size)</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">reservoirSampleAndCount</span></span>[<span class="type">T</span>: <span class="type">ClassTag</span>](</span><br><span class="line">      input: <span class="type">Iterator</span>[<span class="type">T</span>],</span><br><span class="line">      k: <span class="type">Int</span>,</span><br><span class="line">      seed: <span class="type">Long</span> = <span class="type">Random</span>.nextLong())</span><br><span class="line">    : (<span class="type">Array</span>[<span class="type">T</span>], <span class="type">Long</span>) = &#123;</span><br><span class="line">    <span class="keyword">val</span> reservoir = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">T</span>](k)</span><br><span class="line">    <span class="comment">// Put the first k elements in the reservoir.</span></span><br><span class="line">    <span class="comment">// 初始化水塘数据为input的钱K个数，即：reservoir数组中放了RDD分区的前K个key值</span></span><br><span class="line">    <span class="keyword">var</span> i = <span class="number">0</span></span><br><span class="line">    <span class="keyword">while</span> (i &lt; k &amp;&amp; input.hasNext) &#123;</span><br><span class="line">      <span class="keyword">val</span> item = input.next()</span><br><span class="line">      reservoir(i) = item</span><br><span class="line">      i += <span class="number">1</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// If we have consumed all the elements, return them. Otherwise do the replacement.</span></span><br><span class="line">    <span class="comment">// 如果当前的RDD总数小于预设值的采样量则全部作为采样数据并结束采样</span></span><br><span class="line">    <span class="keyword">if</span> (i &lt; k) &#123;</span><br><span class="line">      <span class="comment">// If input size &lt; k, trim the array to return only an array of input size.</span></span><br><span class="line">      <span class="keyword">val</span> trimReservoir = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">T</span>](i)</span><br><span class="line">      <span class="type">System</span>.arraycopy(reservoir, <span class="number">0</span>, trimReservoir, <span class="number">0</span>, i)</span><br><span class="line">      (trimReservoir, i)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// If input size &gt; k, continue the sampling process.</span></span><br><span class="line">      <span class="keyword">var</span> l = i.toLong</span><br><span class="line">      <span class="keyword">val</span> rand = <span class="keyword">new</span> <span class="type">XORShiftRandom</span>(seed)</span><br><span class="line">      <span class="comment">// 遍历所有的key</span></span><br><span class="line">      <span class="keyword">while</span> (input.hasNext) &#123;</span><br><span class="line">        <span class="keyword">val</span> item = input.next()</span><br><span class="line">        l += <span class="number">1</span></span><br><span class="line">        <span class="comment">// There are k elements in the reservoir, and the l-th element has been</span></span><br><span class="line">        <span class="comment">// consumed. It should be chosen with probability k/l. The expression</span></span><br><span class="line">        <span class="comment">// below is a random long chosen uniformly from [0,l)</span></span><br><span class="line">        <span class="comment">// 计算出需要替换的数组下标</span></span><br><span class="line">        <span class="comment">// 选取第n个数的概率是：n/l; 如果随机替换数组值的概率是p=rand.nextDouble，</span></span><br><span class="line">        <span class="comment">// 则如果p&lt;k/l;则替换池中任意一个数，即： p*l &lt; k 则进行替换，用p*l作为随机替换的下标</span></span><br><span class="line">        <span class="keyword">val</span> replacementIndex = (rand.nextDouble() * l).toLong</span><br><span class="line">        <span class="keyword">if</span> (replacementIndex &lt; k) &#123;</span><br><span class="line">          <span class="comment">// 替换reservoir[随机抽取的下标]的值为input[l]的值item</span></span><br><span class="line">          reservoir(replacementIndex.toInt) = item</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      (reservoir, l)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>参考：<a href="https://www.iteblog.com/archives/1525.html" target="_blank" rel="noopener">https://www.iteblog.com/archives/1525.html</a></p>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/12/09/2018-12-09-sparkStreaming-sourceCodeAnalysis_DataInputOutput/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2018/12/12/2018-12-12-sparkStreaming-sourceCodeAnalysis_faultTolerance/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2018/12/12/2018-12-12-sparkCore-sourceCodeAnalysis_reservoirSampleAndCount/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>spark源码分析环境搭建 | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="spark,源码," />
+  
+
+  <meta name="description" content="调试spark源码">
+<meta name="keywords" content="spark,源码,调试">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark源码分析环境搭建">
+<meta property="og:url" content="https://sustcoder.github.io/2018/12/20/2018-12-20-spark-sourceCode-run/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="调试spark源码">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog%2F2018%2Fspark%2Fsrccode%2F1546052559018.png">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/1546053639151.png">
+<meta property="og:updated_time" content="2019-02-11T08:02:17.680Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark源码分析环境搭建">
+<meta name="twitter:description" content="调试spark源码">
+<meta name="twitter:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog%2F2018%2Fspark%2Fsrccode%2F1546052559018.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2018-12-20-spark-sourceCode-run" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">spark源码分析环境搭建</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.12.20</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/spark/">spark</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2018/12/20/2018-12-20-spark-sourceCode-run/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>在学习spark的过程中发现很多博客对概念和原理的讲解存在矛盾或者理解不透彻，所以开始对照源码学习，发现根据概念总结去寻找对应源码，能更好理解，但随之而来的问题是好多源码看不懂，只跑example的话好多地方跑不到，但是结合测试类理解起来就方便多了。</p>
+<p>forck一份源码，在未修改源码的情况下（修改源码后，比如加注释等，在编译阶段容易报错）,使用gitbash进入项目的根目录下，执行下面2条命令使用mvn进行编译：</p>
+<ol>
+<li>设置编译时mven内存大小</li>
+</ol>
+<blockquote>
+<p>export MAVEN_OPTS=”-Xmx2g  -XX:ReservedCodeCacheSize=512m”</p>
+</blockquote>
+<ol start="2">
+<li><code>-T -4</code> :启动四个线程 , <code>- P</code>：将hadoop编译进去 </li>
+</ol>
+<blockquote>
+<p>./build/mvn  -T 4 -Pyarn -Phadoop-2.6  -Dhadoop.version=2.6.0  -DskipTests clean package</p>
+</blockquote>
+<ol start="3">
+<li>通过运行一个test测试是否编译完成</li>
+</ol>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">&gt; build/sbt</span><br><span class="line">&gt; project core</span><br><span class="line">&gt; testOnly *<span class="type">RDDSuite</span> -- -z <span class="string">"serialization"</span></span><br></pre></td></tr></table></figure>
+<p><strong>远程调试</strong></p>
+<p>根据spark的<a href="https://www.zhihu.com/question/24869894" target="_blank" rel="noopener">pmc建议</a>使用远程调试运行test更方便，以下是使用远程调试步骤：</p>
+<ol>
+<li><p>使用idea通过maven导入导入项目：<code>File / Open，选定 Spark 根目录下的 pom.xml</code>,点击确定即可</p>
+</li>
+<li><p>建立remote debugger</p>
+<ol>
+<li>选取菜单项 Run &gt; Edit Configurations… 点击左上角加号，选取 Remote 建立一套远程调试配置，并命名为“Remote Debugging (listen)”：</li>
+<li>选择Debugger mode: <code>Listen to remote JVM</code></li>
+<li>选择Transport:<code>Socket</code></li>
+<li>配置完成后点击Debug，开始启动remote debugger的监听</li>
+</ol>
+<p>配置完成后如下图：</p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog%2F2018%2Fspark%2Fsrccode%2F1546052559018.png" alt="1546052559018"></p>
+</li>
+<li><p>在SBT中启动远程调试，打开idea中的<code>sbt shell</code></p>
+<ol>
+<li><p>SBT 中的 settings key 是跟着当前 sub-project 走的，所以调试时需要切换到对应的模块，例如：切换到core模块，可以在sbt shell中执行以下命令</p>
+<blockquote>
+<p>project core</p>
+</blockquote>
+</li>
+<li><p>设置监听模式远程调试选项：</p>
+<blockquote>
+<p>set javaOptions in Test += “-agentlib:jdwp=transport=dt_socket,server=n,suspend=n,address=localhost:5005”</p>
+</blockquote>
+</li>
+<li><p>启动我们的 test case，<a href="http://www.scalatest.org/user_guide/using_the_runner" target="_blank" rel="noopener">sbt test教程</a></p>
+<blockquote>
+<p>testOnly *RDDSuite – -z “basic operations”</p>
+</blockquote>
+</li>
+</ol>
+<p>如果我们在test调用的代码里面打断点后，就可以进行调试了，结果如图：</p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/1546053639151.png" alt="1546053639151"></p>
+</li>
+</ol>
+<p><strong>报错信息</strong>1</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">[<span class="type">INFO</span>] <span class="type">BUILD</span> <span class="type">FAILURE</span></span><br><span class="line">[<span class="type">INFO</span>] ------------------------------------------------------------------------</span><br><span class="line">[<span class="type">INFO</span>] <span class="type">Total</span> time: <span class="number">05</span>:<span class="number">31</span> min</span><br><span class="line">[<span class="type">INFO</span>] <span class="type">Finished</span> at: <span class="number">2018</span><span class="number">-12</span><span class="number">-25</span>T17:<span class="number">04</span>:<span class="number">22</span>+<span class="number">08</span>:<span class="number">00</span></span><br><span class="line">[<span class="type">INFO</span>] ------------------------------------------------------------------------</span><br><span class="line">[<span class="type">ERROR</span>] <span class="type">Failed</span> to execute goal org.apache.maven.plugins:maven-antrun-plugin:<span class="number">1.8</span>:run (<span class="keyword">default</span>) on project spark-core_2<span class="number">.11</span>: <span class="type">An</span> <span class="type">Ant</span> <span class="type">BuildException</span> has occured: <span class="type">Execute</span> failed: java.io.<span class="type">IOException</span>: <span class="type">Cannot</span> run program <span class="string">"bash"</span> (in directory <span class="string">"E:\data\gitee\fork-spark2.2.0\spark\core"</span>): <span class="type">CreateProcess</span> error=<span class="number">2</span>, 系统找不到指定的文件。</span><br><span class="line">[<span class="type">ERROR</span>] around <span class="type">Ant</span> part ...&lt;exec executable=<span class="string">"bash"</span>&gt;... @ <span class="number">4</span>:<span class="number">27</span> in <span class="type">E</span>:\data\gitee\fork-spark2<span class="number">.2</span><span class="number">.0</span>\spark\core\target\antrun\build-main.xml</span><br><span class="line">[<span class="type">ERROR</span>] -&gt; [<span class="type">Help</span> <span class="number">1</span>]</span><br><span class="line">[<span class="type">ERROR</span>]</span><br><span class="line">[<span class="type">ERROR</span>] <span class="type">To</span> see the full stack trace of the errors, re-run <span class="type">Maven</span> <span class="keyword">with</span> the -e switch.</span><br><span class="line">[<span class="type">ERROR</span>] <span class="type">Re</span>-run <span class="type">Maven</span> using the -<span class="type">X</span> switch to enable full debug logging.</span><br><span class="line">[<span class="type">ERROR</span>]</span><br><span class="line">[<span class="type">ERROR</span>] <span class="type">For</span> more information about the errors and possible solutions, please read the following articles:</span><br><span class="line">[<span class="type">ERROR</span>] [<span class="type">Help</span> <span class="number">1</span>] http:<span class="comment">//cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException</span></span><br><span class="line">[<span class="type">ERROR</span>]</span><br><span class="line">[<span class="type">ERROR</span>] <span class="type">After</span> correcting the problems, you can resume the build <span class="keyword">with</span> the command</span><br><span class="line">[<span class="type">ERROR</span>]   mvn &lt;goals&gt; -rf :spark-core_2<span class="number">.11</span></span><br></pre></td></tr></table></figure>
+<p>解决办法：Spark编译需要在bash环境下，直接在windows环境下编译会报不支持bash错误，</p>
+<ol>
+<li>利用git的bash窗口进行编译</li>
+<li>用<code>Windows Subsystem for Linux</code>,具体的操作，大家可以参考<a href="https://medium.com/hungys-blog/windows-subsystem-for-linux-configuration-caf2f47d0dfb" target="_blank" rel="noopener">这篇文章</a></li>
+</ol>
+<p><strong>报错信息2</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="type">Output</span> path <span class="type">E</span>:\data\gitee\fork-spark2<span class="number">.2</span><span class="number">.0</span>\spark\external\flume-assembly\target\scala<span class="number">-2.11</span>\classes is shared between: <span class="type">Module</span> <span class="symbol">'spark</span>-streaming-flume-assembly' production, <span class="type">Module</span> <span class="symbol">'spark</span>-streaming-flume-assembly_2<span class="number">.11</span>' production</span><br><span class="line"><span class="type">Please</span> configure separate output paths to proceed <span class="keyword">with</span> the compilation.</span><br><span class="line"><span class="type">TIP</span>: you can use <span class="type">Project</span> <span class="type">Artifacts</span> to combine compiled classes <span class="keyword">if</span> needed.</span><br></pre></td></tr></table></figure>
+<p>解决办法： 项目里面.idea文件夹下，有一个models.xml文件，里面同一个文件包含了两个不同的引用。猜测原因maven编译完成后，在idea中打开时又再次选择使用sbt进行编译，结果出现了两份导致，再删掉所有.iml文件后，重新通过mvn进行编译，并且在打开时不选择用sbt进行编译解决。</p>
+<p><strong>报错信息</strong>4</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="type">ERROR</span>: <span class="type">Cannot</span> load <span class="keyword">this</span> <span class="type">JVM</span> <span class="type">TI</span> agent twice, check your java command line <span class="keyword">for</span> duplicate jdwp options.</span><br><span class="line"><span class="type">Disconnected</span> from server</span><br><span class="line"><span class="type">Error</span> occurred during initialization of <span class="type">VM</span></span><br><span class="line">agent library failed to init: jdwp</span><br></pre></td></tr></table></figure>
+<p>解决办法：执行了多次设置调试模式的方法<code>set javaOptions in Test += &quot;-agentlib:jdwp=transport=dt_socket,server=n,suspend=n,address=localhost:5005&quot;</code>导致，关掉sbt shell重启重试</p>
+<p><strong>参考</strong>：</p>
+<p><a href="https://spark.apache.org/developer-tools.html" target="_blank" rel="noopener">https://spark.apache.org/developer-tools.html</a></p>
+<p><a href="https://www.zhihu.com/question/24869894" target="_blank" rel="noopener">https://www.zhihu.com/question/24869894</a> </p>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/12/17/2018-12-17-shuffle-explain/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/01/08/2019-01-08-Spark-Streaming-kafka-direct/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2018/12/20/2018-12-20-spark-sourceCode-run/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>

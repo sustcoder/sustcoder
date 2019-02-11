@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>spark集群环境搭建 | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="spark,环境," />
+  
+
+  <meta name="description" content="yarn环境搭建spark">
+<meta name="keywords" content="spark,yarn,环境,搭建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spark集群环境搭建">
+<meta property="og:url" content="https://sustcoder.github.io/2018/09/28/2018-09-28-spark on yarn/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="yarn环境搭建spark">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2019-02-11T08:02:49.594Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spark集群环境搭建">
+<meta name="twitter:description" content="yarn环境搭建spark">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#spark-on-yarn"><span class="toc-text">spark on yarn</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#软件安装"><span class="toc-text">软件安装</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#当前环境"><span class="toc-text">当前环境</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装scala"><span class="toc-text">安装scala</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#安装spark"><span class="toc-text">安装spark</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#启动"><span class="toc-text">启动</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#关闭"><span class="toc-text">关闭</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#管理界面"><span class="toc-text">管理界面</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#运行示例"><span class="toc-text">运行示例</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#注意事项"><span class="toc-text">注意事项</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#异常处理"><span class="toc-text">异常处理</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#配置链接"><span class="toc-text">配置链接</span></a></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2018-09-28-spark on yarn" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">spark集群环境搭建</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.09.28</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/spark/">spark</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2018/09/28/2018-09-28-spark on yarn/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <h1 id="spark-on-yarn"><a href="#spark-on-yarn" class="headerlink" title="spark on yarn"></a>spark on yarn</h1><h1 id="软件安装"><a href="#软件安装" class="headerlink" title="软件安装"></a>软件安装</h1><h2 id="当前环境"><a href="#当前环境" class="headerlink" title="当前环境"></a>当前环境</h2><p>hadoop环境搭建参考：<a href="https://my.oschina.net/freelili/blog/1834706" target="_blank" rel="noopener">hadoop集群安装</a></p>
+<ul>
+<li>hadoop2.6</li>
+<li>spark-2.2.0-bin-hadoop2.6.tgz</li>
+<li>scala-2.11.12</li>
+</ul>
+<h2 id="安装scala"><a href="#安装scala" class="headerlink" title="安装scala"></a>安装scala</h2><blockquote>
+<p>tar -zxvf scala-2.11.12.tgz</p>
+<p>vi /etc/profile</p>
+</blockquote>
+<p>添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">export SCALA_HOME=/home/hadoop/app/scala</span><br><span class="line">export PATH=$PATH:$SCALA_HOME/bin</span><br></pre></td></tr></table></figure>
+<p>使配置生效</p>
+<blockquote>
+<p>source /etc/profile</p>
+</blockquote>
+<p>查看scala版本号</p>
+<blockquote>
+<p>scala -version</p>
+</blockquote>
+<p>注意： <strong>用root账户修改完变量后，需要重新打开ssh链接，配置才能生效</strong></p>
+<h2 id="安装spark"><a href="#安装spark" class="headerlink" title="安装spark"></a>安装spark</h2><blockquote>
+<p>tar -zvf spark-2.2.0-bin-without-hadoop.tgz</p>
+<p>vi /etc/profile</p>
+</blockquote>
+<p>添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">export SPARK_HOME=/home/hadoop/app/spark2.2.0</span><br><span class="line">export PATH=$PATH:$SPARK_HOME/bin</span><br></pre></td></tr></table></figure>
+<p>修改spark环境变量</p>
+<blockquote>
+<p>cp spark-env.sh.template spark-env.sh</p>
+<p>vi conf/spark-evn.sh</p>
+</blockquote>
+<p>添加以下内容</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">SPARK_DRIVER_MEMORY=512m</span><br><span class="line">SPARK_DIST_CLASSPATH=$(/home/hadoop/app/hadoop-2.6.0/bin/hadoop classpath)</span><br><span class="line">SPARK_LOCAL_DIRS=/home/hadoop/app/spark2.2.0</span><br><span class="line">export SPARK_MASTER_IP=192.168.10.125</span><br><span class="line"></span><br><span class="line">export JAVA_HOME=/home/app/jdk8</span><br><span class="line">export SCALA_HOME=/home/hadoop/app/scala</span><br><span class="line">export HADOOP_HOME=/home/hadoop/app/hadoop</span><br><span class="line">export HADOOP_CONF_DIR=/home/hadoop/app/hadoop/etc/hadoop</span><br><span class="line">export PATH=$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin:$HADOOP_HOME/sbin:$SCALA_HOME/bin</span><br></pre></td></tr></table></figure>
+<p>使配置变量生效</p>
+<blockquote>
+<p>source /etc/profile</p>
+</blockquote>
+<p>配置slaves</p>
+<blockquote>
+<p>vi slaves</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">node3</span><br><span class="line">node4</span><br></pre></td></tr></table></figure>
+<p>将配置文件下发到从节点</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">scp slaves hadoop@node3:/home/hadoop/app/spark2.2.0/conf</span><br><span class="line">scp slaves hadoop@node4:/home/hadoop/app/spark2.2.0/conf</span><br><span class="line">scp spark-env.sh hadoop@node3:/home/hadoop/app/spark2.2.0/conf</span><br><span class="line">scp spark-env.sh hadoop@node4:/home/hadoop/app/spark2.2.0/conf</span><br></pre></td></tr></table></figure>
+<h2 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 启动zookeeper,可能存在选举延迟，可多执行几次./zkServer.sh status查看启动结果</span></span><br><span class="line">./runRemoteCmd.sh "/home/hadoop/app/zookeeper/bin/zkServer.sh start" zookeeper</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在node2节点上执行,启动HDFS</span></span><br><span class="line">sbin/start-dfs.sh</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在node2节点上执行,启动YARN</span></span><br><span class="line">sbin/start-yarn.sh </span><br><span class="line"><span class="meta">#</span><span class="bash"> 在node4节点上面执行,启动resourcemanager</span></span><br><span class="line">sbin/yarn-daemon.sh start resourcemanager</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在node2上启动spark</span></span><br><span class="line">sbin/start-all.sh</span><br></pre></td></tr></table></figure>
+<h2 id="关闭"><a href="#关闭" class="headerlink" title="关闭"></a>关闭</h2><figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 关闭spark</span></span><br><span class="line">sbin/stop-all.sh</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在node4上执行</span></span><br><span class="line">sbin/yarn-daemon.sh stop resourcemanager</span><br><span class="line"><span class="meta">#</span><span class="bash"> 在node2上执行</span></span><br><span class="line">sbin/stop-yarn.sh </span><br><span class="line"><span class="meta">#</span><span class="bash"> 在node2上执行</span></span><br><span class="line">sbin/stop-dfs.sh</span><br><span class="line"><span class="meta">#</span><span class="bash"> 关闭zookeeper</span></span><br><span class="line">runRemoteCmd.sh "/home/hadoop/app/zookeeper/bin/zkServer.sh stop" zookeeper</span><br></pre></td></tr></table></figure>
+<p>查看启动情况</p>
+<blockquote>
+<p>jps</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hdfs进程</span></span><br><span class="line">1661 NameNode</span><br><span class="line">1934 SecondaryNameNode</span><br><span class="line">1750 DataNode</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> yarn进程</span></span><br><span class="line">8395 ResourceManager</span><br><span class="line">7725 NameNode</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> namenode HA</span></span><br><span class="line">8256 DFSZKFailoverController</span><br><span class="line">7985 JournalNode</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> zookeeper进程</span></span><br><span class="line">1286 QuorumPeerMain</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> spark进程</span></span><br><span class="line">2551 Master</span><br><span class="line">2641 Worker</span><br></pre></td></tr></table></figure>
+<h2 id="管理界面"><a href="#管理界面" class="headerlink" title="管理界面"></a>管理界面</h2><figure class="highlight"><table><tr><td class="code"><pre><span class="line"><span class="attribute">hadoop</span>:  http://node2:8088/</span><br><span class="line"><span class="attribute">nameNode</span>: http://node2:50070/</span><br><span class="line"><span class="attribute">nodeManager</span>:  http://node2:8042/</span><br><span class="line">spark master:  http://node2:8080/</span><br><span class="line">spark worker:  http://node2:8081/</span><br><span class="line">spark jobs:  http://node2:4040/</span><br></pre></td></tr></table></figure>
+<h2 id="运行示例"><a href="#运行示例" class="headerlink" title="运行示例"></a>运行示例</h2><p><strong>Spark-shell</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">vi test.text# 在文件中添加 hello spark</span><br><span class="line">hdfs dfs -mkdir /test # 创建文件夹</span><br><span class="line">hdfs dfs -put test.txt /test # 上传文件到hdfs</span><br><span class="line">hdfs dfs -ls /test # 查看是否上传成功</span><br><span class="line">./bin/spark-shell</span><br><span class="line">sc.textFile("hdfs://node2:9000/test/test.txt") # 从hdfs上获取文件</span><br><span class="line">sc.first() # 获取文件的第一行数据</span><br></pre></td></tr></table></figure>
+<p><strong>Run application locally(Local模式)</strong></p>
+<blockquote>
+<p>./bin/spark-submit –class org.apache.spark.examples.SparkPi –master local[4] /home/hadoop/app/spark2.2.0/examples/jars/spark-examples_2.11-2.2.0.jar</p>
+</blockquote>
+<p><strong>Run on a Spark standalone cluster(Standalone模式,使用Spark自带的简单集群管理器)</strong></p>
+<blockquote>
+<p>./bin/spark-submit \<br>–class org.apache.spark.examples.SparkPi \<br>–master spark://node2:7077 \<br>–executor-memory 512m \<br>–total-executor-cores 4 \<br>/home/hadoop/app/spark2.2.0/examples/jars/spark-examples_2.11-2.2.0.jar 10</p>
+</blockquote>
+<p><strong>Run on yarn(YARN模式，使用YARN作为集群管理器)</strong></p>
+<blockquote>
+<p>./bin/spark-submit –class org.apache.spark.examples.SparkPi –master yarn –deploy-mode client examples/jars/spark-examples*.jar 10</p>
+</blockquote>
+<h1 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h1><blockquote>
+<p>HADOOP_CONF_DIR=/home/hadoop/app/hadoop/etc/hadoop</p>
+</blockquote>
+<p>确保 <code>HADOOP_CONF_DIR</code> 或者 <code>YARN_CONF_DIR</code> 指向包含 Hadoop 集群的（客户端）配置文件的目录。这些配置被用于写入 HDFS 并连接到 YARN ResourceManager 。此目录中包含的配置将被分发到 YARN 集群，以便 application（应用程序）使用的所有的所有 containers（容器）都使用相同的配置。如果配置引用了 Java 系统属性或者未由 YARN 管理的环境变量，则还应在 Spark 应用程序的配置（driver（驱动程序），executors（执行器），和在客户端模式下运行时的 AM ）。</p>
+<blockquote>
+<p> SPARK_DIST_CLASSPATH=$(/home/hadoop/app/hadoop-2.6.0/bin/hadoop classpath)</p>
+</blockquote>
+<p>Pre-build with user-provided Hadoop: 属于“Hadoop free”版,不包含hadoop的jar等，这样，下载到的Spark，可应用到任意Hadoop 版本。但是需要在spark的spar-evn.sh中指定配置hadoop的安装路径。</p>
+<blockquote>
+<p>spark-submit</p>
+</blockquote>
+<p>如果用户的应用程序被打包好了，它可以使用 <code>bin/spark-submit</code> 脚本来启动。这个脚本负责设置 Spark 和它的依赖的 classpath，并且可以支持 Spark 所支持的不同的 Cluster Manager 以及 deploy mode（部署模式）:</p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">./bin/spark-submit \</span><br><span class="line">  --class &lt;main-class&gt; \</span><br><span class="line">  --master &lt;master-url&gt; \</span><br><span class="line">  --deploy-mode &lt;deploy-mode&gt; \</span><br><span class="line">  --conf &lt;key&gt;=&lt;value&gt; \</span><br><span class="line">  ... # other options</span><br><span class="line">  &lt;application-jar&gt; \</span><br><span class="line">  [application-arguments]</span><br></pre></td></tr></table></figure>
+<p>一些常用的 options（选项）有 :</p>
+<ul>
+<li><code>--class</code>: 您的应用程序的入口点（例如。 <code>org.apache.spark.examples.SparkPi</code>)</li>
+<li><code>--master</code>: standalone模式下是集群的 master URL，on yarn模式下值是<code>yarn</code></li>
+<li><code>--deploy-mode</code>: 是在 worker 节点(<code>cluster</code>) 上还是在本地作为一个外部的客户端(<code>client</code>) 部署您的 driver(默认: <code>client</code>)</li>
+<li><code>--conf</code>: 按照 key=value 格式任意的 Spark 配置属性。对于包含空格的 value（值）使用引号包 “key=value” 起来。</li>
+<li><code>application-jar</code>: 包括您的应用以及所有依赖的一个打包的 Jar 的路径。该 URL 在您的集群上必须是全局可见的，例如，一个 <code>hdfs://</code> path 或者一个 <code>file://</code> 在所有节点是可见的。</li>
+<li><code>application-arguments</code>: 传递到您的 main class 的 main 方法的参数，如果有的话。</li>
+</ul>
+<h1 id="异常处理"><a href="#异常处理" class="headerlink" title="异常处理"></a>异常处理</h1><p><strong>执行脚本</strong></p>
+<blockquote>
+<p>./bin/spark-submit –class org.apache.spark.examples.SparkPi –master yarn –deploy-mode client /home/hadoop/app/spark2.2.0/examples/jars/spark-examples_2.11-2.2.0.jar</p>
+</blockquote>
+<p><strong>报错信息一</strong></p>
+<figure class="highlight shell"><table><tr><td class="code"><pre><span class="line">Application application_1537990303043_0001 failed 2 times due to AM Container for appattempt_1537990303043_0001_000002 exited with  exitCode: -103</span><br><span class="line">Diagnostics: </span><br><span class="line">Container [pid=2344,containerID=container_1537990303043_0001_02_000001] is running beyond virtual memory limits. </span><br><span class="line">Current usage: 74.0 MB of 1 GB physical memory used; </span><br><span class="line">2.2 GB of 2.1 GB virtual memory used. Killing container.</span><br></pre></td></tr></table></figure>
+<p><strong>问题原因</strong></p>
+<p>虚拟机物理内存设置的是1G，则对应虚拟内存最大为1*2.1=2.1GB,实际使用了2.2[此处疑问：为什么就使用了2.2，单个任务默认分配1024M，加上一个任务的Container默认1024M导致吗？]，所以需要扩大虚拟内存的比例，或者限制container和task的大小，或者关闭掉对虚拟内存的检测。</p>
+<p><strong>解决方法</strong></p>
+<p>修改<code>yarn-site.xml</code>文件，新增以下内容，详情原因请参考：<a href="https://sustcoder.github.io/2018/09/27/YARN%20%E5%86%85%E5%AD%98%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3/">YARN 内存参数详解</a></p>
+<figure class="highlight xml"><table><tr><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">name</span>&gt;</span>yarn.nodemanager.vmem-pmem-ratio<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">value</span>&gt;</span>3<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>虚拟内存和物理内存比率，默认为2.1<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">property</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">name</span>&gt;</span>yarn.nodemanager.vmem-check-enabled<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">value</span>&gt;</span>false<span class="tag">&lt;/<span class="name">value</span>&gt;</span></span><br><span class="line">  <span class="tag">&lt;<span class="name">description</span>&gt;</span>不检查虚拟内存，默认为true<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p><strong>报错二</strong></p>
+<figure class="highlight java"><table><tr><td class="code"><pre><span class="line">Exception in thread <span class="string">"main"</span> org.apache.spark.SparkException: Yarn application has already ended! It might have been killed or unable to launch application master.</span><br><span class="line">	at org.apache.spark.scheduler.cluster.YarnClientSchedulerBackend.waitForApplication(YarnClientSchedulerBackend.scala:<span class="number">85</span>)</span><br><span class="line">	at org.apache.spark.scheduler.cluster.YarnClientSchedulerBackend.start(YarnClientSchedulerBackend.scala:<span class="number">62</span>)</span><br><span class="line">	at org.apache.spark.scheduler.TaskSchedulerImpl.start(TaskSchedulerImpl.scala:<span class="number">173</span>)</span><br><span class="line">	at org.apache.spark.SparkContext.&lt;init&gt;(SparkContext.scala:<span class="number">509</span>)</span><br><span class="line">	at org.apache.spark.SparkContext$.getOrCreate(SparkContext.scala:<span class="number">2509</span>)</span><br><span class="line">	at org.apache.spark.sql.SparkSession$Builder$$anonfun$<span class="number">6</span>.apply(SparkSession.scala:<span class="number">909</span>)</span><br><span class="line">	at org.apache.spark.sql.SparkSession$Builder$$anonfun$<span class="number">6</span>.apply(SparkSession.scala:<span class="number">901</span>)</span><br><span class="line">	at scala.Option.getOrElse(Option.scala:<span class="number">121</span>)</span><br><span class="line">	at org.apache.spark.sql.SparkSession$Builder.getOrCreate(SparkSession.scala:<span class="number">901</span>)</span><br><span class="line">	at org.apache.spark.examples.SparkPi$.main(SparkPi.scala:<span class="number">31</span>)</span><br><span class="line">	at org.apache.spark.examples.SparkPi.main(SparkPi.scala)</span><br><span class="line">	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)</span><br><span class="line">	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:<span class="number">62</span>)</span><br><span class="line">	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:<span class="number">43</span>)</span><br><span class="line">	at java.lang.reflect.Method.invoke(Method.java:<span class="number">498</span>)</span><br><span class="line">	at org.apache.spark.deploy.SparkSubmit$.org$apache$spark$deploy$SparkSubmit$$runMain(SparkSubmit.scala:<span class="number">755</span>)</span><br><span class="line">	at org.apache.spark.deploy.SparkSubmit$.doRunMain$<span class="number">1</span>(SparkSubmit.scala:<span class="number">180</span>)</span><br><span class="line">	at org.apache.spark.deploy.SparkSubmit$.submit(SparkSubmit.scala:<span class="number">205</span>)</span><br><span class="line">	at org.apache.spark.deploy.SparkSubmit$.main(SparkSubmit.scala:<span class="number">119</span>)</span><br><span class="line">	at org.apache.spark.deploy.SparkSubmit.main(SparkSubmit.scala)</span><br><span class="line"><span class="number">18</span>/<span class="number">09</span>/<span class="number">04</span> <span class="number">17</span>:<span class="number">01</span>:<span class="number">43</span> INFO util.ShutdownHookManager: Shutdown hook called</span><br></pre></td></tr></table></figure>
+<p><strong>问题原因</strong></p>
+<p>以上报错是在伪集群上运行时报错信息，具体报错原因未知，在切换到真正的集群环境后无此报错</p>
+<h1 id="配置链接"><a href="#配置链接" class="headerlink" title="配置链接"></a>配置链接</h1><p><strong>hadoop</strong></p>
+<ul>
+<li><p><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/hadoop/core-site.xml" target="_blank" rel="noopener">core-site.xml</a></p>
+</li>
+<li><p><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/hadoop/hdfs-site.xml" target="_blank" rel="noopener">hdfs-site.xml</a></p>
+</li>
+<li><p><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/hadoop/mapred-site.xml" target="_blank" rel="noopener">mapred-site.xml</a></p>
+</li>
+<li><p><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/hadoop/yarn-site.xml" target="_blank" rel="noopener">yarn-site.xml</a></p>
+</li>
+<li><p><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/hadoop/hadoop-env.sh" target="_blank" rel="noopener">hadoop-env.sh</a></p>
+</li>
+<li><p><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/hadoop/masters" target="_blank" rel="noopener">masters</a></p>
+</li>
+<li><p><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/hadoop/slaves" target="_blank" rel="noopener">slaves</a></p>
+</li>
+</ul>
+<p><strong>zookeeper</strong></p>
+<ul>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/zookeeper/zoo.cfg" target="_blank" rel="noopener">zoo.cfg</a></li>
+</ul>
+<p><strong>spark</strong></p>
+<ul>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/spark/spark-env.sh" target="_blank" rel="noopener">spark-env.sh</a></li>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018//hadoop/conf/spark/slaves" target="_blank" rel="noopener">slaves</a></li>
+</ul>
+<p><strong>env</strong></p>
+<ul>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/env/hosts" target="_blank" rel="noopener">hosts</a></li>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/env/profile" target="_blank" rel="noopener">profile</a></li>
+</ul>
+<p><strong>tools</strong></p>
+<ul>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/tools/deploy.conf" target="_blank" rel="noopener">deploy.conf</a></li>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/tools/deploy.sh" target="_blank" rel="noopener">deploy.sh</a></li>
+<li><a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/hadoop/conf/tools/runRemoteCmd.sh" target="_blank" rel="noopener">runRemoteCmd.sh</a></li>
+</ul>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/09/27/2018-09-27-YARN 内存参数详解/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2018/10/16/2018-10-16-RDD explain/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2018/09/28/2018-09-28-spark on yarn/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+</body>
+</html>
