@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>sparkCore源码解析之shuffle | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="spark,源码解析," />
+  
+
+  <meta name="description" content="map and reduce">
+<meta name="keywords" content="spark,core,源码,shuffle">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sparkCore源码解析之shuffle">
+<meta property="og:url" content="https://sustcoder.github.io/2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-shuffle/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="map and reduce">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/shuffle.png">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F6F.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F81.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F83.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F96.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F98.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F99.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F9A.tmp.png">
+<meta property="og:updated_time" content="2019-01-14T11:20:44.066Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sparkCore源码解析之shuffle">
+<meta name="twitter:description" content="map and reduce">
+<meta name="twitter:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/shuffle.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-对比MapReduce"><span class="toc-text">1. 对比MapReduce</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-宏观比较"><span class="toc-text">1.1. 宏观比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-微观比较"><span class="toc-text">1.2. 微观比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-实现方式"><span class="toc-text">1.3. 实现方式</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-Map"><span class="toc-text">2. Map</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-MapStatus的注册和获取"><span class="toc-text">2.1. MapStatus的注册和获取</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-1-MapOutputTrackerMaster"><span class="toc-text">2.1.1. MapOutputTrackerMaster</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-2-MapOutputTrackerWorker"><span class="toc-text">2.1.2. MapOutputTrackerWorker</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-写数据"><span class="toc-text">2.2. 写数据</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-1-writer"><span class="toc-text">2.2.1. writer</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-1-BypassMergeSortShuffleWriter"><span class="toc-text">2.2.1.1. BypassMergeSortShuffleWriter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-2-UnsafeShuffleWriter"><span class="toc-text">2.2.1.2. UnsafeShuffleWriter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-2-1-3-SortShuffleWriter"><span class="toc-text">2.2.1.3. SortShuffleWriter</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#2-2-1-3-1-写文件"><span class="toc-text">2.2.1.3.1. 写文件</span></a><ol class="toc-child"><li class="toc-item toc-level-6"><a class="toc-link" href="#2-2-1-3-1-1-数据格式"><span class="toc-text">2.2.1.3.1.1. 数据格式</span></a></li><li class="toc-item toc-level-6"><a class="toc-link" href="#2-2-1-3-1-2-spill"><span class="toc-text">2.2.1.3.1.2. spill</span></a></li></ol></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-2-1-3-2-建索引"><span class="toc-text">2.2.1.3.2. 建索引</span></a></li></ol></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-2-写顺序"><span class="toc-text">2.2.2. 写顺序</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-reduce"><span class="toc-text">3. reduce</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-读数据"><span class="toc-text">3.1. 读数据</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-reduce端获取"><span class="toc-text">3.2. reduce端获取</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#4-shuffle管理入口"><span class="toc-text">4. shuffle管理入口</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#4-1-HashShuffleManager"><span class="toc-text">4.1. HashShuffleManager</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-2-SortShuffleManager"><span class="toc-text">4.2. SortShuffleManager</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-1-reader"><span class="toc-text">4.2.1. reader</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#4-2-1-1-BlockStoreShuffleReader"><span class="toc-text">4.2.1.1. BlockStoreShuffleReader</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-2-writer"><span class="toc-text">4.2.2. writer</span></a></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2018-12-01-sparkCore-sorceCodeAnalysis-shuffle" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">sparkCore源码解析之shuffle</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.01.14</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/spark/">spark</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-shuffle/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/shuffle.png" alt="shuffle"></p>
+<p>Shuffle Map的过程,即Shuffle Stage的ShuffleTask按照一定的规则将数据写到相应的文件中,并把写的文件”位置信息” 以MapOutput返回给DAGScheduler ,MapOutput将它更新到特定位置就完成了整个Shuffle Map过程.<br>在Spark中,Shuffle reduce过程抽象化为ShuffledRDD,即这个RDD的compute方法计算每一个分片即每一个reduce的数据是通过拉取ShuffleMap输出的文件并返回Iterator来实现的</p>
+<h1 id="1-对比MapReduce"><a href="#1-对比MapReduce" class="headerlink" title="1. 对比MapReduce"></a>1. <strong>对比MapReduce</strong></h1><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F6F.tmp.jpg" alt="img"> </p>
+<h2 id="1-1-宏观比较"><a href="#1-1-宏观比较" class="headerlink" title="1.1. 宏观比较"></a>1.1. <strong>宏观比较</strong></h2><p><strong>两者差别不大，度分为map和reduce两个阶段</strong>。</p>
+<p>从 high-level 的角度来看，两者并没有大的差别。 都是将 mapper（Spark 里是 ShuffleMapTask）的输出进行 partition，不同的 partition 送到不同的 reducer（Spark 里 reducer 可能是下一个 stage 里的 ShuffleMapTask，也可能是 ResultTask）。Reducer 以内存作缓冲区，边 shuffle 边 aggregate 数据，等到数据 aggregate 好以后进行 reduce() （Spark 里可能是后续的一系列操作）。</p>
+<h2 id="1-2-微观比较"><a href="#1-2-微观比较" class="headerlink" title="1.2. 微观比较"></a>1.2. <strong>微观比较</strong></h2><p>差别较大，Hadoop在Map和reduce阶段都有排序操作，而spark默认使用hash进行聚合，不会提前进行排序操作。</p>
+<p>从 low-level 的角度来看，两者差别不小。 Hadoop MapReduce 是 sort-based，进入 combine() 和 reduce() 的 records 必须先 sort。这样的好处在于 combine/reduce() 可以处理大规模的数据，因为其输入数据可以通过外排得到（mapper 对每段数据先做排序，reducer 的 shuffle 对排好序的每段数据做归并）。目前的 Spark 默认选择的是 hash-based，通常使用 HashMap 来对 shuffle 来的数据进行 aggregate，不会对数据进行提前排序。如果用户需要经过排序的数据，那么需要自己调用类似 sortByKey() 的操作</p>
+<h2 id="1-3-实现方式"><a href="#1-3-实现方式" class="headerlink" title="1.3. 实现方式"></a>1.3. <strong>实现方式</strong></h2><p>mapreduce将处理流程进行细化出map,shuffle,sort,reduce等几个阶段，而spark只有一个stage和一系列的transformation()</p>
+<p>Hadoop MapReduce 将处理流程划分出明显的几个阶段：map(), spill, merge, shuffle, sort, reduce() 等。每个阶段各司其职，可以按照过程式的编程思想来逐一实现每个阶段的功能。在 Spark 中，没有这样功能明确的阶段，只有不同的 stage 和一系列的 transformation()，所以 spill, merge, aggregate 等操作需要蕴含在 transformation() 中。</p>
+<h1 id="2-Map"><a href="#2-Map" class="headerlink" title="2. Map"></a>2. <strong>Map</strong></h1><p>为了分析方便，假定每个Executor只有1个CPU core，也就是说，无论这个Executor上分配多少个task线程，同一时间都只能执行一个task线程。</p>
+<p>shuffle write阶段，主要就是在一个stage结束计算之后，为了下一个stage可以执行shuffle类的算子（比如reduceByKey），而将每个task处理的数据按key进行“分类”。所谓“分类”，就是对相同的key执行hash算法，从而将相同key都写入同一个磁盘文件中，而每一个磁盘文件都只属于下游stage的一个task。在将数据写入磁盘之前，会先将数据写入内存缓冲中，当内存缓冲填满之后，才会溢写到磁盘文件中去。参见下面HashShuffleManager图示。</p>
+<h2 id="2-1-MapStatus的注册和获取"><a href="#2-1-MapStatus的注册和获取" class="headerlink" title="2.1. MapStatus的注册和获取"></a>2.1. <strong>MapStatus的注册和获取</strong></h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F81.tmp.jpg" alt="img"><br><strong>参见:</strong> <a href="#_ShuffleMapStage">ShuffleMapStage</a></p>
+<p>MapOutputTracker :是为MapOutput提供一个访问入口，提供了注册和获取MapStatus的接口。</p>
+<p>MapOutputTracker可以把每个Map输出的MapStatus注册到Tracker,同时Tracker也提供了访问接口,可以从该Tracker中读取指定每个ShuffleID所对应的map输出的位置;</p>
+<p>同时MapOutputTracker也是主从结构,其中Master提供了将Map输出注册到Tracker的入口, slave运行在每个Executor上,提供读取入口, 但是这个读取过程需要和Master进行交互,将指定的 ShuffleID所对应的MapStatus信息从Master中fetch过来;</p>
+<h3 id="2-1-1-MapOutputTrackerMaster"><a href="#2-1-1-MapOutputTrackerMaster" class="headerlink" title="2.1.1. MapOutputTrackerMaster"></a>2.1.1. <strong>MapOutputTrackerMaster</strong></h3><p><strong>参见:</strong> <a href="#___stage">提交stage</a></p>
+<p><strong>driver端，记录shuffle信息</strong></p>
+<p><strong>MapStatus数据记录的格式：{shuffleId,mapId,MapStatus}</strong></p>
+<p>每个Shuffle都对应一个ShuffleID,该ShuffleID下面对应多个MapID,每个MapID都会输出一个MapStatus,通过该MapStatus,可以定位每个 MapID所对应的ShuffleMapTask运行过程中所对应的机器</p>
+<p>通过shuffleID进行索引,存储了所有注册到tracker的Shuffle, 通过registerShuffle可以进行注册Shuffle, 通过registerMapOutput可以在每次ShuffleMapTask结束以后,将Map的输出注册到Track中; 同时提供了getSerializedMapOutputStatuses接口 将一个Shuffle所有的MapStatus进行序列化并进行返回;</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MapOutputTrackerMaster</span></span>&#123;</span><br><span class="line"><span class="keyword">val</span> shuffleStatuses = <span class="keyword">new</span> <span class="type">ConcurrentHashMap</span>[<span class="type">Int</span>, <span class="type">ShuffleStatus</span>]().asScala</span><br><span class="line"><span class="keyword">val</span> mapStatuses = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">MapStatus</span>](numPartitions)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 在创建stage时，初始化ShuffleStatus</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">registerShuffle</span></span>(shuffleId: <span class="type">Int</span>, numMaps: <span class="type">Int</span>) &#123;</span><br><span class="line">    shuffleStatuses.put(</span><br><span class="line">		shuffleId,<span class="keyword">new</span> <span class="type">ShuffleStatus</span>(numMaps)) </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 将MapTask的输出注册到Track中</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">registerMapOutput</span></span>(shuffleId: <span class="type">Int</span>, mapId: <span class="type">Int</span>, status: <span class="type">MapStatus</span>) &#123;</span><br><span class="line">    **<span class="comment">// &#123;shuffleId,mapId,MapStatus&#125;**</span></span><br><span class="line">	shuffleStatuses(shuffleId).addMapOutput(mapId, status)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">addMapOutput</span></span>(mapId: <span class="type">Int</span>, status: <span class="type">MapStatus</span>): <span class="type">Unit</span> = synchronized &#123;</span><br><span class="line">    mapStatuses(mapId) = status</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// mapStatus中包含了task运行位置，partitions数量等信息</span></span><br><span class="line"><span class="type">MapStatus</span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">location</span></span>: <span class="type">BlockManagerId</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getSizeForBlock</span></span>(reduceId: <span class="type">Int</span>): <span class="type">Long</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-1-2-MapOutputTrackerWorker"><a href="#2-1-2-MapOutputTrackerWorker" class="headerlink" title="2.1.2. MapOutputTrackerWorker"></a>2.1.2. <strong>MapOutputTrackerWorker</strong></h3><p>excutor端获取shuffle信息，注意：local模式下是直接从trackerMaster获取信息的（worker和master拥有相同的父类，local模式下直接获取不用再走RPC调用）</p>
+<p>MapOutputTrackerWorker的实现很简单,核心功能就是getServerStatuses, 它获取指定Shuffle的每个reduce所对应的MapStatus信息</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MapOutputWorker</span></span>&#123;</span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">getMapSizesByExecutorId</span></span>(shuffleId: <span class="type">Int</span>, startPartition: <span class="type">Int</span>, endPartition: <span class="type">Int</span>)</span><br><span class="line">​      : <span class="type">Seq</span>[(<span class="type">BlockManagerId</span>, <span class="type">Seq</span>[(<span class="type">BlockId</span>, <span class="type">Long</span>)])] = &#123;</span><br><span class="line"><span class="comment">// 根据shuffleId获取MapStatus集合</span></span><br><span class="line"><span class="keyword">val</span> statuses = getStatuses(shuffleId)</span><br><span class="line"><span class="comment">// 根据shuffleId和起始分区，从mapStatus获取响应的blockManager信息</span></span><br><span class="line"><span class="type">MapOutputTracker</span>.convertMapStatuses(shuffleId, startPartition, endPartition, statuses)</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 发送消息给trackerMaster，获取mapOutPut信息</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">askTracker</span></span>&#123;</span><br><span class="line">​	<span class="keyword">var</span> trackerEndpoint: <span class="type">RpcEndpointRef</span> = _</span><br><span class="line">​	trackerEndpoint.askSync[<span class="type">T</span>](message)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="2-2-写数据"><a href="#2-2-写数据" class="headerlink" title="2.2. 写数据"></a>2.2. <strong>写数据</strong></h2><p>ShuffleMapTask负责写数据操作，最后会生成.data和.index文件，在执行完毕后返回一个MapStatus对象。</p>
+<p>ShuffleMapTask在excutor上获取到具体的writer后进行实际的写操作</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShuffleMapTask</span> <span class="keyword">extends</span> <span class="title">Task</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">def runTask(context: <span class="type">TaskContext</span></span>)</span>: <span class="type">MapStatus</span> = &#123;</span><br><span class="line">	<span class="comment">// 反序列化接收到的数据</span></span><br><span class="line">    <span class="keyword">val</span> (rdd, dep) = closureSerializer.deserialize(</span><br><span class="line">      <span class="type">ByteBuffer</span>.wrap(taskBinary.value))</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 调用ShuffleManager的getWriter方法获取一组writer</span></span><br><span class="line"> writer = manager.getWriter(dep.shuffleHandle, partitionId, context)</span><br><span class="line">	 <span class="comment">// 遍历RDD进行write</span></span><br><span class="line">    writer.write(）</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-2-1-writer"><a href="#2-2-1-writer" class="headerlink" title="2.2.1. writer"></a>2.2.1. <strong>writer</strong></h3><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F83.tmp.jpg" alt="img"><br><strong>参见:</strong> <a href="#_writer_2">writer</a></p>
+<p> Get a writer for a given partition. Called on executors by map tasks.</p>
+<p>因为Shuffle过程中需要将Map结果数据输出到文件，所以需要通过注册一个ShuffleHandle来获取到一个ShuffleWriter对象，通过它来控制Map阶段记录数据输出的行为。其中，ShuffleHandle包含了如下基本信息：</p>
+<p>shuffleId：标识Shuffle过程的唯一ID<br>numMaps：RDD对应的Partitioner指定的Partition的个数，也就是ShuffleMapTask输出的Partition个数<br>dependency：RDD对应的依赖ShuffleDependency</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SortShuffleManager</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getWriter</span></span>()&#123;</span><br><span class="line">​	handle <span class="keyword">match</span> &#123;</span><br><span class="line">​      <span class="keyword">case</span> <span class="type">SerializedShuffleHandle</span>=&gt;</span><br><span class="line">​			<span class="keyword">new</span> <span class="type">UnsafeShuffleWriter</span>()</span><br><span class="line">​	  <span class="keyword">case</span> <span class="type">BypassMergeSortShuffleHandle</span>=&gt;</span><br><span class="line">​			<span class="keyword">new</span> <span class="type">BypassMergeSortShuffleWriter</span>()</span><br><span class="line">​	  <span class="keyword">case</span> <span class="type">BaseShuffleHandle</span>=&gt;</span><br><span class="line">​			 <span class="keyword">new</span> <span class="type">SortShuffleWriter</span>()</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="2-2-1-1-BypassMergeSortShuffleWriter"><a href="#2-2-1-1-BypassMergeSortShuffleWriter" class="headerlink" title="2.2.1.1. BypassMergeSortShuffleWriter"></a>2.2.1.1. <strong>BypassMergeSortShuffleWriter</strong></h4><ol>
+<li>按照hash方式排序</li>
+<li>每个partition产生一个file,然后将相同task产生的文件进行合并。blocks的偏移量被单独存放在一个索引文件中</li>
+<li>通过IndexShuffleBlockResolver对写入的数据进行缓存</li>
+<li>使用场景：<ol>
+<li>不用排序</li>
+<li>没有聚合函数</li>
+<li>分区数量少于设置的阈值<br>spark.shuffle.sort.bypassMergeThreshold默认值是200<h4 id="2-2-1-2-UnsafeShuffleWriter"><a href="#2-2-1-2-UnsafeShuffleWriter" class="headerlink" title="2.2.1.2. UnsafeShuffleWriter"></a>2.2.1.2. <strong>UnsafeShuffleWriter</strong></h4></li>
+</ol>
+</li>
+</ol>
+<p>如果ShuffleDependency中的Serializer，允许对将要输出数据对象进行排序后，再执行序列化写入到文件，则会选择创建一个SerializedShuffleHandle，生成一个UnsafeShuffleWriter</p>
+<h4 id="2-2-1-3-SortShuffleWriter"><a href="#2-2-1-3-SortShuffleWriter" class="headerlink" title="2.2.1.3. SortShuffleWriter"></a>2.2.1.3. <strong>SortShuffleWriter</strong></h4><p>除了上面两种ShuffleHandle以后，其他情况都会创建一个BaseShuffleHandle对象，它会以反序列化的格式处理Shuffle输出数据。</p>
+<p>数据记录格式:</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">// shuffle_shuffleId_mapId_reducId</span></span><br><span class="line">shuffle_2901_11825_0.data</span><br><span class="line">shuffle_2901_11825_0.index</span><br></pre></td></tr></table></figure>
+<h5 id="2-2-1-3-1-写文件"><a href="#2-2-1-3-1-写文件" class="headerlink" title="2.2.1.3.1. 写文件"></a>2.2.1.3.1. <strong>写文件</strong></h5><h6 id="2-2-1-3-1-1-数据格式"><a href="#2-2-1-3-1-1-数据格式" class="headerlink" title="2.2.1.3.1.1. 数据格式"></a>2.2.1.3.1.1. <strong>数据格式</strong></h6><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F96.tmp.jpg" alt="img"> </p>
+<p>数据格式有两种，如果不需要合并则使用buffer，如果需要合并使用map</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExternalSorter</span></span>&#123;</span><br><span class="line">map = <span class="keyword">new</span> <span class="type">PartitionedAppendOnlyMap</span>[<span class="type">K</span>, <span class="type">C</span>]</span><br><span class="line">buffer = <span class="keyword">new</span> <span class="type">PartitionedPairBuffer</span>[<span class="type">K</span>, <span class="type">C</span>]</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">insertAll</span></span>&#123;</span><br><span class="line">​	<span class="keyword">if</span>(shouldCombine)&#123;</span><br><span class="line">​		map.changeValue()</span><br><span class="line">​	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">​		 buffer.insert()</span><br><span class="line">​	&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>2.2.1.3.1.1.1. map</p>
+<p>在Map阶段会执行Combine操作，在Map阶段进行Combine操作能够降低Map阶段数据记录的总数，从而降低Shuffle过程中数据的跨网络拷贝传输。这时，RDD对应的ShuffleDependency需要设置一个Aggregator用来执行Combine操作</p>
+<p>map是内存数据结构，最重要的是update函数和map的changeValue方法（这里的map对应的实现类是PartitionedAppendOnlyMap）。update函数所做的工作，其实就是对createCombiner和mergeValue这两个函数的使用，第一次遇到一个Key调用createCombiner函数处理，非首次遇到同一个Key对应新的Value调用mergeValue函数进行合并处理。map的changeValue方法主要是将Key和Value在map中存储或者进行修改（对出现的同一个Key的多个Value进行合并，并将合并后的新Value替换旧Value）。<br>PartitionedAppendOnlyMap是一个经过优化的哈希表，它支持向map中追加数据，以及修改Key对应的Value，但是不支持删除某个Key及其对应的Value。它能够支持的存储容量是0.7 * 2 ^ 29 = 375809638。当达到指定存储容量或者指定限制，就会将map中记录数据Spill到磁盘文件，这个过程和前面的类似</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExternalSorter</span></span>&#123;</span><br><span class="line">map = <span class="keyword">new</span> <span class="type">PartitionedAppendOnlyMap</span>[<span class="type">K</span>, <span class="type">C</span>]</span><br><span class="line">buffer = <span class="keyword">new</span> <span class="type">PartitionedPairBuffer</span>[<span class="type">K</span>, <span class="type">C</span>]</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">insertAll</span></span>&#123;</span><br><span class="line">​	<span class="keyword">if</span>(shouldCombine)&#123;</span><br><span class="line"><span class="comment">// 定义一个aggtregator函数</span></span><br><span class="line"><span class="keyword">val</span> mergeValue = aggregator.get.mergeValue</span><br><span class="line">​      <span class="keyword">val</span> createCombiner = aggregator.get.createCombiner</span><br><span class="line">​      <span class="keyword">var</span> kv: <span class="type">Product2</span>[<span class="type">K</span>, <span class="type">V</span>] = <span class="literal">null</span></span><br><span class="line">​      <span class="keyword">val</span> update = (hadValue: <span class="type">Boolean</span>, oldValue: <span class="type">C</span>) =&gt; &#123;</span><br><span class="line">​        <span class="keyword">if</span> (hadValue) mergeValue(oldValue, kv._2) <span class="keyword">else</span> createCombiner(kv._2)</span><br><span class="line">​      &#125;</span><br><span class="line"><span class="comment">// 使用update函数实现对新增元素的合并操作</span></span><br><span class="line">map.changeValue((getPartition(kv._1), kv._1), update)</span><br><span class="line">​	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">​		 buffer.insert()</span><br><span class="line">​	&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>2.2.1.3.1.1.2. buffer</p>
+<p>map端不需要排序时使用的数据存储格式</p>
+<p>Map阶段不进行Combine操作，在内存中缓存记录数据会使用PartitionedPairBuffer这种数据结构来缓存、排序记录数据，它是一个Append-only Buffer，仅支持向Buffer中追加数据键值对记录</p>
+<ol>
+<li>buffer大小：默认64，最大2 ^ 30 - 1</li>
+</ol>
+<h6 id="2-2-1-3-1-2-spill"><a href="#2-2-1-3-1-2-spill" class="headerlink" title="2.2.1.3.1.2. spill"></a>2.2.1.3.1.2. <strong>spill</strong></h6><p>组装完数据后写磁盘</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ExternalSorter</span></span>&#123;</span><br><span class="line">map = <span class="keyword">new</span> <span class="type">PartitionedAppendOnlyMap</span>[<span class="type">K</span>, <span class="type">C</span>]</span><br><span class="line">buffer = <span class="keyword">new</span> <span class="type">PartitionedPairBuffer</span>[<span class="type">K</span>, <span class="type">C</span>]</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">insertAll</span></span>&#123;</span><br><span class="line">​	<span class="keyword">if</span>(shouldCombine)&#123;</span><br><span class="line">​		maybeSpillCollection(usingMap = <span class="literal">true</span>)</span><br><span class="line">​	&#125;<span class="keyword">else</span>&#123;</span><br><span class="line">​		 maybeSpillCollection(usingMap = <span class="literal">false</span>)</span><br><span class="line">​	&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h5 id="2-2-1-3-2-建索引"><a href="#2-2-1-3-2-建索引" class="headerlink" title="2.2.1.3.2. 建索引"></a>2.2.1.3.2. <strong>建索引</strong></h5><h3 id="2-2-2-写顺序"><a href="#2-2-2-写顺序" class="headerlink" title="2.2.2. 写顺序"></a>2.2.2. <strong>写顺序</strong></h3><h1 id="3-reduce"><a href="#3-reduce" class="headerlink" title="3. reduce"></a>3. <strong>reduce</strong></h1><p>shuffle read，通常就是一个stage刚开始时要做的事情。此时该stage的每一个task就需要将上一个stage的计算结果中的所有相同key，从各个节点上通过网络都拉取到自己所在的节点上，然后进行key的聚合或连接等操作。由于shuffle write的过程中，task为下游stage的每个task都创建了一个磁盘文件，因此shuffle read的过程中，每个task只要从上游stage的所有task所在节点上，拉取属于自己的那一个磁盘文件即可。</p>
+<p>shuffle read的拉取过程是一边拉取一边进行聚合的。每个shuffle read task都会有一个自己的buffer缓冲，每次都只能拉取与buffer缓冲相同大小的数据，然后通过内存中的一个Map进行聚合等操作。聚合完一批数据后，再拉取下一批数据，并放到buffer缓冲中进行聚合操作。以此类推，直到最后将所有数据到拉取完，并得到最终的结果</p>
+<h2 id="3-1-读数据"><a href="#3-1-读数据" class="headerlink" title="3.1. 读数据"></a>3.1. <strong>读数据</strong></h2><h2 id="3-2-reduce端获取"><a href="#3-2-reduce端获取" class="headerlink" title="3.2. reduce端获取"></a>3.2. <strong>reduce端获取</strong></h2><p><strong>参见:</strong> <a href="#_ResultTask">ResultTask</a></p>
+<p>调用ShuffleManager通过getReader方法获取具体的Reader，去读数据。</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShuffledRDD</span> </span>&#123;</span><br><span class="line">​	<span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>()&#123;</span><br><span class="line">​		 <span class="keyword">val</span> dep = dependencies.head.asInstanceOf[<span class="type">ShuffleDependency</span>[<span class="type">K</span>, <span class="type">V</span>, <span class="type">C</span>]]</span><br><span class="line">​    <span class="type">SparkEnv</span>.get.shuffleManager.getReader(dep.shuffleHandle, split.index, split.index + <span class="number">1</span>, context)</span><br><span class="line">​      .read()</span><br><span class="line">​      .asInstanceOf[<span class="type">Iterator</span>[(<span class="type">K</span>, <span class="type">C</span>)]]</span><br><span class="line">​	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="4-shuffle管理入口"><a href="#4-shuffle管理入口" class="headerlink" title="4. shuffle管理入口"></a>4. <strong>shuffle管理入口</strong></h1><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F98.tmp.jpg" alt="img"> </p>
+<p>ShuffleManager是shuffle整个过程的管理入口，对外提供读写等接口。</p>
+<p>ShuffleManager在driver中创建，driver用ShuffleManager进行注册shuffle，执行读写操作等</p>
+<p>对Shuffle做了什么优化来提供Spark的性能,本质上就是对ShuffleManager进行优化和提供新的实现</p>
+<p>spark2.2.0中已取消对HashShuffleManager的支持<br>新增了tungsten-sort。</p>
+<p>ShuffleManager有两种实现HashShuffleManager和SorShuffleManager,1.1一会的版本默认是SortShuffleManger,可通过<br>conf.get(“spark.shuffle.manager”, “sort”) 修改默认的shuffle实现方式</p>
+<p>SortShuffleManager和HashShuffleManager有一个本质的差别,即同一个map的多个reduce的数据都写入到同一个文件中;那么SortShuffleManager产生的Shuffle 文件个数为2*Map个数</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">// shuffleManger提供的功能</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">trait</span> <span class="title">ShuffleManager</span> </span>&#123;</span><br><span class="line"> <span class="comment">// shuffle注册</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">registerShuffle</span></span>(shuffleId: <span class="type">Int</span>, numMaps: <span class="type">Int</span>,dependency: <span class="type">ShuffleDependency</span>): <span class="type">ShuffleHandle</span></span><br><span class="line"><span class="comment">// shuffle注销</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">unregisterShuffle</span></span>(shuffleId: <span class="type">Int</span>): <span class="type">Boolean</span></span><br><span class="line"><span class="comment">// mapTask返回一组Writer</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getWriter</span></span>(handle: <span class="type">ShuffleHandle</span>, mapId: <span class="type">Int</span>, context: <span class="type">TaskContext</span>): <span class="type">ShuffleWriter</span></span><br><span class="line"><span class="comment">// 提供Start分区编号和end分区编号;当然一般情况如果每个reduce单独运行,那么start-end区间也只对应一个reduce</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getReader</span></span>(handle: <span class="type">ShuffleHandle</span>,startPartition: <span class="type">Int</span>,endPartition: <span class="type">Int</span>,context: <span class="type">TaskContext</span>): <span class="type">ShuffleReader</span></span><br><span class="line"></span><br><span class="line"> </span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">shuffleBlockManager</span></span>: <span class="type">ShuffleBlockManager</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">stop</span></span>(): <span class="type">Unit</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="4-1-HashShuffleManager"><a href="#4-1-HashShuffleManager" class="headerlink" title="4.1. HashShuffleManager"></a>4.1. <strong>HashShuffleManager</strong></h2><p>spark2.2.0中已取消对HashShuffleManager的支持<br>(SPARK-14667)。参考：<a href="http://lxw1234.com/archives/2016/05/666.htm" target="_blank" rel="noopener">http://lxw1234.com/archives/2016/05/666.htm</a></p>
+<p>HashShuffleManager是Spark最早版本的ShuffleManager，该ShuffleManager的严重缺点是会产生太多小文件，特别是reduce个数很多时候，存在很大的性能瓶颈。</p>
+<p>最初版本：ShuffleMapTask个数×reduce个数<br>后期版本：<br>并发的ShuffleMapTask的个数为M<br>xreduce个数</p>
+<h2 id="4-2-SortShuffleManager"><a href="#4-2-SortShuffleManager" class="headerlink" title="4.2. SortShuffleManager"></a>4.2. <strong>SortShuffleManager</strong></h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F99.tmp.jpg" alt="img"> </p>
+<p>参考：<a href="http://shiyanjun.cn/archives/1655.html" target="_blank" rel="noopener">http://shiyanjun.cn/archives/1655.html</a></p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wps6F9A.tmp.png" alt="img"> </p>
+<h3 id="4-2-1-reader"><a href="#4-2-1-reader" class="headerlink" title="4.2.1. reader"></a>4.2.1. <strong>reader</strong></h3><h4 id="4-2-1-1-BlockStoreShuffleReader"><a href="#4-2-1-1-BlockStoreShuffleReader" class="headerlink" title="4.2.1.1. BlockStoreShuffleReader"></a>4.2.1.1. <strong>BlockStoreShuffleReader</strong></h4><p>根据partition的起止位置，从别的节点获取blockURL,node信息组成reader，</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">BlockStoreShuffleReader</span>[<span class="type">K</span>, <span class="type">C</span>](<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    handle: <span class="type">BaseShuffleHandle</span>[<span class="type">K</span>, _, <span class="type">C</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    startPartition: <span class="type">Int</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    endPartition: <span class="type">Int</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    context: <span class="type">TaskContext</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    serializerManager: <span class="type">SerializerManager</span> = 		<span class="type">SparkEnv</span>.get.serializerManager,</span></span></span><br><span class="line"><span class="class"><span class="params">    blockManager: <span class="type">BlockManager</span> = 		<span class="type">SparkEnv</span>.get.blockManager,</span></span></span><br><span class="line"><span class="class"><span class="params">    mapOutputTracker: <span class="type">MapOutputTracker</span> = 		<span class="type">SparkEnv</span>.get.mapOutputTracker</span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">ShuffleReader</span>[<span class="type">K</span>, <span class="type">C</span>] <span class="keyword">with</span> <span class="title">Logging</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">var</span> blocksByAddress=</span><br><span class="line">	mapOutputTracker.getMapSizesByExecutorId(handle.shuffleId, startPartition, endPartition)</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 根据获取到的block信息，给trackerMaster发送消息，获取RDD数据</span></span><br><span class="line">	<span class="keyword">new</span> <span class="type">ShuffleBlockFetcherIterator</span>(</span><br><span class="line">		blocksByAddress</span><br><span class="line">	)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MapOutputTracker</span></span>&#123;</span><br><span class="line"><span class="comment">// excutor在计算ShuffleRDD时调用，返回&#123;blocak地址，Seq&#123;blockID,和输出数据大小&#125;&#125;等</span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">getMapSizesByExecutorId</span></span>(shuffleId: <span class="type">Int</span>, startPartition: <span class="type">Int</span>, endPartition: <span class="type">Int</span>)</span><br><span class="line">      : <span class="type">Seq</span>[(<span class="type">BlockManagerId</span>, <span class="type">Seq</span>[(<span class="type">BlockId</span>, <span class="type">Long</span>)])]</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShuffleBlockFetcherIterator</span></span>&#123;</span><br><span class="line">	<span class="keyword">val</span> results = </span><br><span class="line">		<span class="keyword">new</span> <span class="type">LinkedBlockingQueue</span>[<span class="type">FetchResult</span>]</span><br><span class="line">	<span class="comment">// 负责发送请求和接收数据</span></span><br><span class="line">	<span class="function"><span class="keyword">def</span> <span class="title">sendRequest</span></span>(req: <span class="type">FetchRequest</span>)&#123;</span><br><span class="line">		</span><br><span class="line">	<span class="comment">// 将接收到的数据放入到队列中</span></span><br><span class="line">	results.put(<span class="keyword">new</span> <span class="type">SuccessFetchResult</span>(</span><br><span class="line">	  blockId: <span class="type">BlockId</span>,</span><br><span class="line">      address: <span class="type">BlockManagerId</span>,</span><br><span class="line">      size: <span class="type">Long</span>,</span><br><span class="line">      **buf: <span class="type">ManagedBuffer</span>,**</span><br><span class="line">      isNetworkReqDone: <span class="type">Boolean</span></span><br><span class="line">	))</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="4-2-2-writer"><a href="#4-2-2-writer" class="headerlink" title="4.2.2. writer"></a>4.2.2. <strong>writer</strong></h3><p><strong>参见:</strong> <a href="#_writer">writer</a></p>
+<p>Shuffle过程中需要将Map结果数据输出到文件，所以需要通过注册一个ShuffleHandle来获取到一个ShuffleWriter对象，通过它来控制Map阶段记录数据输出的行为</p>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-partition/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-block/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-shuffle/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

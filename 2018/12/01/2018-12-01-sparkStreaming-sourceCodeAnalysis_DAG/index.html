@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>sparkStreaming源码解析之DAG定义 | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="spark,源码解析," />
+  
+
+  <meta name="description" content="sparkStream的DAG定义源码解析">
+<meta name="keywords" content="spark,streaming,源码,DAG">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sparkStreaming源码解析之DAG定义">
+<meta property="og:url" content="https://sustcoder.github.io/2018/12/01/2018-12-01-sparkStreaming-sourceCodeAnalysis_DAG/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="sparkStream的DAG定义源码解析">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82A.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsC3C6.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wps230.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wps614F.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/DAG.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82B.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82C.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA83D.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA83E.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA83F.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA864.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA865.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA866.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA87D.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA880.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA890.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA891.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA892.tmp.jpg">
+<meta property="og:updated_time" content="2019-02-11T08:05:03.394Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sparkStreaming源码解析之DAG定义">
+<meta name="twitter:description" content="sparkStream的DAG定义源码解析">
+<meta name="twitter:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82A.tmp.jpg">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-DStream"><span class="toc-text">1. DStream</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-1-RDD"><span class="toc-text">1.1. RDD</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-1-存储"><span class="toc-text">1.1.1. 存储</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-2-获取"><span class="toc-text">1.1.2. 获取</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-2-1-getOrCompute"><span class="toc-text">1.1.2.1. getOrCompute</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-3-生成"><span class="toc-text">1.1.3. 生成</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-3-1-InputStream"><span class="toc-text">1.1.3.1. InputStream</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-1-3-1-1-FileInputStream"><span class="toc-text">1.1.3.1.1. FileInputStream</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-3-2-TransformationStream"><span class="toc-text">1.1.3.2. TransformationStream</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-3-3-OutputDStream"><span class="toc-text">1.1.3.3. OutputDStream</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-2-特征"><span class="toc-text">1.2. 特征</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-3-实现类"><span class="toc-text">1.3. 实现类</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-1-ForeachDStream"><span class="toc-text">1.3.1. ForeachDStream</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-2-Transformed-DStream"><span class="toc-text">1.3.2. Transformed DStream</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-3-InputDStream"><span class="toc-text">1.3.3. InputDStream</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-DStreamGraph"><span class="toc-text">2. DStreamGraph</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-DAG分类"><span class="toc-text">2.1 DAG分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-DAG生成"><span class="toc-text">2.2 DAG生成</span></a></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2018-12-01-sparkStreaming-sourceCodeAnalysis_DAG" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">sparkStreaming源码解析之DAG定义</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2018.12.01</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/spark/">spark</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2018/12/01/2018-12-01-sparkStreaming-sourceCodeAnalysis_DAG/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p>此文是从思维导图中导出稍作调整后生成的，思维脑图对代码浏览支持不是很好，为了更好阅读体验，文中涉及到的源码都是删除掉不必要的代码后的伪代码，如需获取更好阅读体验可下载脑图配合阅读：</p>
+<p> 此博文共分为四个部分：</p>
+<ol>
+<li><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82A.tmp.jpg" alt="img"><a href="https://sustcoder.github.io/2018/12/01/sparkStreaming-sourceCodeAnalysis_DAG/">DAG定义</a></li>
+<li><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsC3C6.tmp.jpg" alt="img"><a href="https://sustcoder.github.io/2018/12/03/sparkStreaming-sourceCodeAnalysis_job/">Job动态生成</a></li>
+<li><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wps230.tmp.jpg" alt="img"><a href="https://sustcoder.github.io/2018/12/09/sparkStreaming-sourceCodeAnalysis_DataInputOutput/">数据的产生与导入</a></li>
+<li><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wps614F.tmp.jpg" alt="img"><a href="https://sustcoder.github.io/2018/12/12/sparkStreaming-sourceCodeAnalysis_faultTolerance/">容错</a></li>
+</ol>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/DAG.jpg" alt="img"></p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82B.tmp.jpg" alt="img"> </p>
+<h1 id="1-DStream"><a href="#1-DStream" class="headerlink" title="1. DStream"></a>1. <strong>DStream</strong></h1><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA82C.tmp.jpg" alt="img"> </p>
+<h2 id="1-1-RDD"><a href="#1-1-RDD" class="headerlink" title="1.1. RDD"></a>1.1. <strong>RDD</strong></h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA83D.tmp.jpg" alt="img"> </p>
+<p><strong>DStream和RDD关系：</strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">DStream is a continuous sequence of RDDs：</span><br><span class="line">generatedRDDs=new HashMap[Time,RDD[T]]()</span><br></pre></td></tr></table></figure>
+<h3 id="1-1-1-存储"><a href="#1-1-1-存储" class="headerlink" title="1.1.1. 存储"></a>1.1.1. <strong>存储</strong></h3><p> <strong>存储格式</strong></p>
+<p>DStream内部通过一个HashMap的变量generatedRDD来记录生成的RDD:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private[streaming] var generatedRDDs = new HashMap[Time, RDD[T]] ()</span><br></pre></td></tr></table></figure>
+<p><em>其中 ：</em></p>
+<p>​    <em>- key: time是生成当前batch的时间戳</em></p>
+<p>​    <em>- value: 生成的RDD实例</em></p>
+<p> <strong>每一个不同的 DStream 实例，都有一个自己的 generatedRDD，即每个转换操作的结果都会保留</strong></p>
+<h3 id="1-1-2-获取"><a href="#1-1-2-获取" class="headerlink" title="1.1.2. 获取"></a>1.1.2. <strong>获取</strong></h3><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA83E.tmp.jpg" alt="img"> </p>
+<h4 id="1-1-2-1-getOrCompute"><a href="#1-1-2-1-getOrCompute" class="headerlink" title="1.1.2.1. getOrCompute"></a>1.1.2.1. <strong>getOrCompute</strong></h4><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA83F.tmp.jpg" alt="img"> </p>
+<ol>
+<li><p>从rdd的map中获取：generatedRDDs.get(time).orElse</p>
+</li>
+<li><p>map中没有则计算：val newRDD=compute(time)</p>
+</li>
+<li><p>将计算的newRDD放入map中：generatedRDDs.put(time, newRDD)</p>
+<p>其中compute方法有以下特点：</p>
+</li>
+</ol>
+<ul>
+<li><p>不同DStream的计算方式不同</p>
+</li>
+<li><p>inputStream会对接对应数据源的API</p>
+</li>
+<li><p>transformStream会从父依赖中去获取RDD并进行转换得新的DStream</p>
+</li>
+</ul>
+<p>compute方法实现：</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ReceiverInputDStream</span></span>&#123;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(validTime: <span class="type">Time</span>): <span class="type">Option</span>[<span class="type">RDD</span>[<span class="type">T</span>]] = &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> blockRDD = &#123;</span><br><span class="line"> </span><br><span class="line">      <span class="keyword">if</span> (validTime &lt; graph.startTime) &#123;</span><br><span class="line"></span><br><span class="line">        </span><br><span class="line">        <span class="comment">// If this is called for any time before the start time of the context,</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// then this returns an empty RDD. This may happen when recovering from a</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// driver failure without any write ahead log to recover pre-failure data.</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">new</span> <span class="type">BlockRDD</span>[<span class="type">T</span>](ssc.sc, <span class="type">Array</span>.empty)</span><br><span class="line"></span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Otherwise, ask the tracker for all the blocks that have been allocated to this stream</span></span><br><span class="line"></span><br><span class="line">        <span class="comment">// for this batch</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> receiverTracker = ssc.scheduler.receiverTracker</span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> blockInfos = receiverTracker.getBlocksOfBatch(validTime).getOrElse(id, <span class="type">Seq</span>.empty)</span><br><span class="line"></span><br><span class="line"> </span><br><span class="line">        <span class="comment">// Register the input blocks information into InputInfoTracker</span></span><br><span class="line"></span><br><span class="line">        <span class="keyword">val</span> inputInfo = <span class="type">StreamInputInfo</span>(id, blockInfos.flatMap(_.numRecords).sum)</span><br><span class="line"></span><br><span class="line">        ssc.scheduler.inputInfoTracker.reportInfo(validTime, inputInfo)</span><br><span class="line"></span><br><span class="line"> </span><br><span class="line">        <span class="comment">// Create the BlockRDD</span></span><br><span class="line"></span><br><span class="line">        createBlockRDD(validTime, blockInfos)</span><br><span class="line"></span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">Some</span>(blockRDD)</span><br><span class="line"></span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-1-3-生成"><a href="#1-1-3-生成" class="headerlink" title="1.1.3. 生成"></a>1.1.3. <strong>生成</strong></h3><p>RDD主要分为以下三个过程：InputStream -&gt; TransFormationStream -&gt; OutputStream</p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA864.tmp.jpg" alt="img"> </p>
+<h4 id="1-1-3-1-InputStream"><a href="#1-1-3-1-InputStream" class="headerlink" title="1.1.3.1. InputStream"></a>1.1.3.1. <strong>InputStream</strong></h4><p>inputstream包括FileInputStream，KafkaInputStream等等</p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA865.tmp.jpg" alt="img"> </p>
+<h5 id="1-1-3-1-1-FileInputStream"><a href="#1-1-3-1-1-FileInputStream" class="headerlink" title="1.1.3.1.1. FileInputStream"></a>1.1.3.1.1. <strong>FileInputStream</strong></h5><p>FileInputStream的生成步骤：</p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA866.tmp.jpg" alt="img"> </p>
+<ol>
+<li><p>找到新产生的文件：val newFiles = findNewFiles(validTime.milliseconds)</p>
+</li>
+<li><p>将newFiles转换为RDDs：val rdds=filesToRDD(newFiles)</p>
+<p>2.1.  遍历文件列表获取生成RDD: val fileRDDs=files.map(file=&gt;newAPIHadoop(file))</p>
+<p>2.2.  将每个文件的RDD进行合并并返回：return new UnionRDD(fileRDDs)</p>
+</li>
+<li><p>返回生成的rdds</p>
+</li>
+</ol>
+<h4 id="1-1-3-2-TransformationStream"><a href="#1-1-3-2-TransformationStream" class="headerlink" title="1.1.3.2. TransformationStream"></a>1.1.3.2. <strong>TransformationStream</strong></h4><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA87D.tmp.jpg" alt="img"> </p>
+<p>RDD的转换实现：</p>
+<ol>
+<li>获取parent DStream：val parentDs=parent.getOrCompute(validTime)</li>
+<li>执行转换函数并返回转换结果：return parentDs.map(mapFunc)</li>
+</ol>
+<p><strong>转换类的DStream实现特点</strong>：</p>
+<ul>
+<li><p>传入parent DStream和转换函数</p>
+</li>
+<li><p>compute方法中从parent DStream中获取DStream并对其作用转换函数</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span>[streaming]</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MappedDStream</span>[<span class="type">T</span>: <span class="type">ClassTag</span>, <span class="type">U</span>: <span class="type">ClassTag</span>] (<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    parent: <span class="type">DStream</span>[<span class="type">T</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    mapFunc: <span class="type">T</span> =&gt; <span class="type">U</span></span></span></span><br><span class="line"><span class="class"><span class="params">  </span>) <span class="keyword">extends</span> <span class="title">DStream</span>[<span class="type">U</span>](<span class="params">parent.ssc</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">dependencies</span></span>: <span class="type">List</span>[<span class="type">DStream</span>[_]] = <span class="type">List</span>(parent)</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">slideDuration</span></span>: <span class="type">Duration</span> = parent.slideDuration</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(validTime: <span class="type">Time</span>): <span class="type">Option</span>[<span class="type">RDD</span>[<span class="type">U</span>]] = &#123;</span><br><span class="line">    parent.getOrCompute(validTime).map(_.map[<span class="type">U</span>](mapFunc))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>不同DStream的getOrCompute方法实现：</p>
+<ul>
+<li>FilteredDStream：<code>parent.getOrCompute(validTime).map(_.filter(filterFunc)</code></li>
+<li>FlatMapValuedDStream:<code>parent.getOrCompute(validTime).map(_.flatMapValues[U](flatMapValueFunc)</code></li>
+<li>MappedDStream:<code>parent.getOrCompute(validTime).map(_.map[U](mapFunc))</code></li>
+</ul>
+<p>在最开始， <strong>DStream 的 transformation 的 API 设计与 RDD 的 transformation 设计保持了一致，就使得，每一个 dStreamA.transformation() 得到的新 dStreamB 能将 dStreamA.transformation() 操作完美复制为每个 batch 的 rddA.transformation() 操作</strong>。这也就是 DStream 能够作为 RDD 模板，在每个 batch 里实例化 RDD 的根本原因。</p>
+<h4 id="1-1-3-3-OutputDStream"><a href="#1-1-3-3-OutputDStream" class="headerlink" title="1.1.3.3. OutputDStream"></a>1.1.3.3. <strong>OutputDStream</strong></h4><p>OutputDStream的操作最后都转换到ForEachDStream(),ForeachDStream中会生成Job并返回。</p>
+<p> <strong>伪代码</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">generateJob</span></span>(time:<span class="type">Time</span>)&#123;</span><br><span class="line">	<span class="keyword">val</span> jobFunc=()=&gt;crateRDD&#123;</span><br><span class="line">		foreachFunc(rdd,time)</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="type">Some</span>(<span class="keyword">new</span> <span class="type">Job</span>(time,jobFunc))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>源码</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span>[streaming]</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ForEachDStream</span>[<span class="type">T</span>: <span class="type">ClassTag</span>] (<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    parent: <span class="type">DStream</span>[<span class="type">T</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    foreachFunc: (<span class="type">RDD</span>[<span class="type">T</span>], <span class="type">Time</span></span>) <span class="title">=&gt;</span> <span class="title">Unit</span></span></span><br><span class="line"><span class="class">  ) <span class="keyword">extends</span> <span class="title">DStream</span>[<span class="type">Unit</span>](<span class="params">parent.ssc</span>) </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">dependencies</span></span>: <span class="type">List</span>[<span class="type">DStream</span>[_]] = <span class="type">List</span>(parent)</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">slideDuration</span></span>: <span class="type">Duration</span> = parent.slideDuration</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(validTime: <span class="type">Time</span>): <span class="type">Option</span>[<span class="type">RDD</span>[<span class="type">Unit</span>]] = <span class="type">None</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">generateJob</span></span>(time: <span class="type">Time</span>): <span class="type">Option</span>[<span class="type">Job</span>] = &#123;</span><br><span class="line">    parent.getOrCompute(time) <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> <span class="type">Some</span>(rdd) =&gt;</span><br><span class="line">        <span class="keyword">val</span> jobFunc = () =&gt; createRDDWithLocalProperties(time) &#123;</span><br><span class="line">          ssc.sparkContext.setCallSite(creationSite)</span><br><span class="line">          foreachFunc(rdd, time)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="type">Some</span>(<span class="keyword">new</span> <span class="type">Job</span>(time, jobFunc))</span><br><span class="line">        <span class="keyword">case</span> <span class="type">None</span> =&gt; <span class="type">None</span></span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>通过对output stream节点进行遍历，就可以得到所有上游依赖的DStream,直至找到没有父依赖的inputStream。</p>
+<h2 id="1-2-特征"><a href="#1-2-特征" class="headerlink" title="1.2. 特征"></a>1.2. <strong>特征</strong></h2><p> DStream基本属性:</p>
+<ul>
+<li><p>父依赖： dependencies: List[DStream[_]]</p>
+</li>
+<li><p>时间间隔：slideDuration:Duration</p>
+</li>
+<li><p>生成RDD的函数：compute</p>
+</li>
+</ul>
+<h2 id="1-3-实现类"><a href="#1-3-实现类" class="headerlink" title="1.3. 实现类"></a>1.3. <strong>实现类</strong></h2><p>DStream的实现类可分为三种：输入，转换和输出</p>
+<p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA880.tmp.jpg" alt="img"> </p>
+<p>DStream之间的转换类似于RDD之间的转换，对于wordCount的例子，实现代码：</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> lines=ssc.socketTextStream(ip,port)</span><br><span class="line"><span class="keyword">val</span> worlds=lines.flatMap(_.split(<span class="string">"_"</span>))</span><br><span class="line"><span class="keyword">val</span> pairs=words.map(word=&gt;(word,<span class="number">1</span>))</span><br><span class="line"><span class="keyword">val</span> wordCounts=pairs.reduceByKey(_+_)</span><br><span class="line">wordCounts.print()</span><br></pre></td></tr></table></figure>
+<p>每个函数的返回对象用具体实现代替：</p>
+ <figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">val</span> lines=<span class="keyword">new</span> <span class="type">SocketInputDStream</span>(ip,port)</span><br><span class="line"><span class="keyword">val</span> words=<span class="keyword">new</span> <span class="type">FlatMappedDStream</span>(lines,_.split(<span class="string">"_"</span>))</span><br><span class="line"><span class="keyword">val</span> pairs=<span class="keyword">new</span> <span class="type">MappedDStream</span>(words,word=&gt;(word,<span class="number">1</span>))</span><br><span class="line"><span class="keyword">val</span> wordCounts=<span class="keyword">new</span> <span class="type">ShuffledDStream</span>(pairs,_+_)</span><br><span class="line"><span class="keyword">new</span> <span class="type">ForeachDStream</span>(wordCounts,cnt=&gt;cnt.print())</span><br></pre></td></tr></table></figure>
+<h3 id="1-3-1-ForeachDStream"><a href="#1-3-1-ForeachDStream" class="headerlink" title="1.3.1. ForeachDStream"></a>1.3.1. <strong>ForeachDStream</strong></h3><p> DStream的实现分为两种，transformation和output</p>
+<p>不同的转换操作有其对应的DStream实现，所有的output操作只对应于ForeachDStream</p>
+<h3 id="1-3-2-Transformed-DStream"><a href="#1-3-2-Transformed-DStream" class="headerlink" title="1.3.2. Transformed DStream"></a>1.3.2. <strong>Transformed DStream</strong></h3><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA890.tmp.jpg" alt="img"> </p>
+<h3 id="1-3-3-InputDStream"><a href="#1-3-3-InputDStream" class="headerlink" title="1.3.3. InputDStream"></a>1.3.3. <strong>InputDStream</strong></h3><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA891.tmp.jpg" alt="img"> </p>
+<h1 id="2-DStreamGraph"><a href="#2-DStreamGraph" class="headerlink" title="2. DStreamGraph"></a>2. <strong>DStreamGraph</strong></h1><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/wpsA892.tmp.jpg" alt="img"> </p>
+<h2 id="2-1-DAG分类"><a href="#2-1-DAG分类" class="headerlink" title="2.1 DAG分类"></a>2.1 <strong>DAG分类</strong></h2><ul>
+<li><p>逻辑DAG: 通过transformation操作正向生成</p>
+</li>
+<li><p>物理DAG: 惰性求值的原因，在遇到output操作时根据dependency逆向宽度优先遍历求值。</p>
+</li>
+</ul>
+<h2 id="2-2-DAG生成"><a href="#2-2-DAG生成" class="headerlink" title="2.2 DAG生成"></a>2.2 DAG生成</h2><p> <strong>DStreamGraph属性</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">inputStreams=<span class="keyword">new</span> <span class="type">ArrayBuffer</span>[<span class="type">InputDStream</span>[_]]()</span><br><span class="line">outputStreams=<span class="keyword">new</span> <span class="type">ArrayBuffer</span>[<span class="type">DStream</span>[_]]()</span><br></pre></td></tr></table></figure>
+<p><strong>DAG实现过程</strong></p>
+<p>​    通过对output stream节点进行遍历，就可以得到所有上游依赖的DStream,直至找到没有父依赖的inputStream。</p>
+<p>​    sparkStreaming 记录整个DStream DAG的方式就是通过一个DStreamGraph 实例记录了到所有output stream节点的引用</p>
+<p><strong>generateJobs</strong></p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">generateJobs</span></span>(time: <span class="type">Time</span>): <span class="type">Seq</span>[<span class="type">Job</span>] = &#123;</span><br><span class="line">      <span class="keyword">val</span> jobs = <span class="keyword">this</span>.synchronized &#123;</span><br><span class="line">      outputStreams.flatMap &#123; </span><br><span class="line">		outputStream =&gt;</span><br><span class="line">        <span class="keyword">val</span> jobOption = </span><br><span class="line">			<span class="comment">// 调用了foreachDStream来生成每个job</span></span><br><span class="line">			outputStream.generateJob(time)   jobOption.foreach(_.setCallSite(outputStream.creationSite))</span><br><span class="line">        jobOption</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">	<span class="comment">// 返回生成的Job列表</span></span><br><span class="line">    jobs</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p> <strong>脑图制作参考</strong>：<a href="https://github.com/lw-lin/CoolplaySpark" target="_blank" rel="noopener">https://github.com/lw-lin/CoolplaySpark</a></p>
+<p><strong>完整脑图链接地址</strong>：<a href="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/spark-streaming-all.png" target="_blank" rel="noopener">https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/srccode/spark-streaming-all.png</a></p>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2018/11/14/2018-11-14-Data consistency  in microservices/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="show pull-right" href="/2018/12/03/2018-12-03-sparkStreaming-sourceCodeAnalysis_job/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2018/12/01/2018-12-01-sparkStreaming-sourceCodeAnalysis_DAG/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>

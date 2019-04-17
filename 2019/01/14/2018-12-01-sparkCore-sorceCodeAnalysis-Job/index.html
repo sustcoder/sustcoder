@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+
+
+  <html class="light page-post">
+
+
+<head>
+  <meta charset="utf-8">
+  
+  <title>sparkCore源码解析之Job | sustcoder</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  
+    <meta name="keywords" content="spark,源码解析," />
+  
+
+  <meta name="description" content="rdd的DAG到stage到task">
+<meta name="keywords" content="spark,core,源码,job">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sparkCore源码解析之Job">
+<meta property="og:url" content="https://sustcoder.github.io/2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-Job/index.html">
+<meta property="og:site_name" content="sustcoder">
+<meta property="og:description" content="rdd的DAG到stage到task">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/Job.png">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9AB.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9AC.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9AD.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9BE.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9BF.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9C0.tmp.jpg">
+<meta property="og:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9C1.tmp.jpg">
+<meta property="og:updated_time" content="2019-01-14T11:17:11.980Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="sparkCore源码解析之Job">
+<meta name="twitter:description" content="rdd的DAG到stage到task">
+<meta name="twitter:image" content="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/Job.png">
+
+  
+
+  
+    <link rel="icon" href="/favicon.ico">
+  
+
+  <link href="/css/styles.css?v=c114cben" rel="stylesheet">
+
+
+  
+
+  
+
+  
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?f1cc8b0edce213e23b90ab65ff3c30ff";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+  
+  <script type="text/javascript">
+	(function(){
+	    var bp = document.createElement('script');
+	    var curProtocol = window.location.protocol.split(':')[0];
+	    if (curProtocol === 'https') {
+	        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+	    }
+	    else {
+	        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+	    }
+	    var s = document.getElementsByTagName("script")[0];
+	    s.parentNode.insertBefore(bp, s);
+	})();
+  </script>
+
+
+
+  
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <link rel="stylesheet" href="//cdn.bootcss.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+</head>
+
+<body>
+
+
+  
+    <span id="toolbox-mobile" class="toolbox-mobile">盒子</span>
+  
+
+  <div class="post-header CENTER">
+   
+  <div class="toolbox">
+    <a class="toolbox-entry" href="/">
+      <span class="toolbox-entry-text">盒子</span>
+      <i class="icon-angle-down"></i>
+      <i class="icon-home"></i>
+    </a>
+    <ul class="list-toolbox">
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/blog/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            博客
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/category/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            分类
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/tag/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            标签
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/link/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            友链
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/about/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            关于
+          </a>
+        </li>
+      
+        <li class="item-toolbox">
+          <a
+            class="CIRCLE"
+            href="/search/"
+            rel="noopener noreferrer"
+            target="_self"
+            >
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  </div>
+
+
+</div>
+
+
+  <div id="toc" class="toc-article">
+    <strong class="toc-title">文章目录</strong>
+    <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#1-概念"><span class="toc-text">1. 概念</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-job处理流程"><span class="toc-text">2. job处理流程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-job生成过程"><span class="toc-text">2.1. job生成过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-1-job重载函数"><span class="toc-text">2.1.1. job重载函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-2-设置回调函数"><span class="toc-text">2.1.2. 设置回调函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-3-获取需要执行的excutor"><span class="toc-text">2.1.3. 获取需要执行的excutor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-4-将Job放入队列"><span class="toc-text">2.1.4. 将Job放入队列</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-job监听"><span class="toc-text">2.2. job监听</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-1-监听触发"><span class="toc-text">2.2.1. 监听触发</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-2-初始化job和stage"><span class="toc-text">2.2.2. 初始化job和stage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-3-提交stage"><span class="toc-text">2.2.3. 提交stage</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-3-stage转task"><span class="toc-text">2.3. stage转task</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-1-过滤需要执行的分片"><span class="toc-text">2.3.1. 过滤需要执行的分片</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-2-序列化和广播"><span class="toc-text">2.3.2. 序列化和广播</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-3-构造task对象"><span class="toc-text">2.3.3. 构造task对象</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-3-1-ShuffleMapTask"><span class="toc-text">2.3.3.1. ShuffleMapTask</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-3-3-2-ResultTask"><span class="toc-text">2.3.3.2. ResultTask</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-4-taskScheduler调度task"><span class="toc-text">2.3.4. taskScheduler调度task</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-4-获取运行结果"><span class="toc-text">2.4. 获取运行结果</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-1-ResultStage"><span class="toc-text">2.4.1. ResultStage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-2-ShuffleMapStage"><span class="toc-text">2.4.2. ShuffleMapStage</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-5-doCheckPoint"><span class="toc-text">2.5. doCheckPoint</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-stage"><span class="toc-text">3. stage</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-ShuffleMapStage"><span class="toc-text">3.1. ShuffleMapStage</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-1-ShuffleMapTask"><span class="toc-text">3.1.1. ShuffleMapTask</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-2-获取task分片"><span class="toc-text">3.1.2. 获取task分片</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-2-ResultStage"><span class="toc-text">3.2. ResultStage</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-1-ResultTask"><span class="toc-text">3.2.1. ResultTask</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-2-获取task分片"><span class="toc-text">3.2.2. 获取task分片</span></a></li></ol></li></ol></li></ol>
+  </div>
+
+
+
+<div class="content content-post CENTER">
+   <article id="post-2018-12-01-sparkCore-sorceCodeAnalysis-Job" class="article article-type-post" itemprop="blogPost">
+  <header class="article-header">
+    <h1 class="post-title">sparkCore源码解析之Job</h1>
+
+    <div class="article-meta">
+      <span>
+        <i class="icon-calendar"></i>
+        <span>2019.01.14</span>
+      </span>
+
+      
+        <span class="article-author">
+          <i class="icon-user"></i>
+          <span>freeli</span>
+        </span>
+      
+
+      
+  <span class="article-category">
+    <i class="icon-list"></i>
+    <a class="article-category-link" href="/categories/spark/">spark</a>
+  </span>
+
+
+
+      
+        <span>
+          <i class="icon-comment"></i>
+          <a href="https://sustcoder.github.io//2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-Job/#disqus_thread"></a>
+        </span>
+      
+
+      
+      <i class="fa fa-eye"></i> 
+        <span id="busuanzi_container_page_pv">
+           &nbsp热度 <span id="busuanzi_value_page_pv">
+           <i class="fa fa-spinner fa-spin"></i></span>℃
+        </span>
+      
+      
+    </div>
+  </header>
+
+  <div class="article-content">
+    
+      <p> <img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/Job.png" alt="job"></p>
+<h1 id="1-概念"><a href="#1-概念" class="headerlink" title="1. 概念"></a>1. <strong>概念</strong></h1><p>站在不同的角度看job</p>
+<ol>
+<li><p>transaction: Job是由一组RDD上转换和动作组成。</p>
+</li>
+<li><p>stage: Job是由ResultStage和多个ShuffleMapState组成</p>
+</li>
+<li><p>init:由action操作触发提交执行的一个函数<br> action操作会触发调用sc.runJob方法，</p>
+</li>
+</ol>
+<p>Job是一组rdd的转换以及最后动作的操作集合，它是Spark里面计算最大最虚的概念，甚至在spark的任务页面中都无法看到job这个单位。 但是不管怎么样，在spark用户的角度，job是我们计算目标的单位，每次在一个rdd上做一个动作操作时，都会触发一个job，完成计算并返回我们想要的数据。<br><strong>Job是由一组RDD上转换和动作组成</strong>，这组RDD之间的转换关系表现为一个有向无环图(DAG)，每个RDD的生成依赖于前面1个或多个RDD。<br>在Spark中，两个RDD之间的依赖关系是Spark的核心。站在RDD的角度，两者依赖表现为点对点依赖， 但是在Spark中，RDD存在分区（partition）的概念，两个RDD之间的转换会被细化为两个RDD分区之间的转换。<br>Stage的划分是对一个Job里面一系列RDD转换和动作进行划分。<br>首先job是因动作而产生，因此每个job肯定都有一个ResultStage，否则job就不会启动。<br>其次，如果Job内部RDD之间存在宽依赖，Spark会针对它产生一个中间Stage，即为ShuffleStage，严格来说应该是ShuffleMapStage，这个stage是针对父RDD而产生的， 相当于在父RDD上做一个父rdd.map().collect()的操作。ShuffleMapStage生成的map输入，对于子RDD，如果检测到所自己所“宽依赖”的stage完成计算，就可以启动一个shuffleFectch， 从而将父RDD输出的数据拉取过程，进行后续的计算。<br>  因此<strong>一个Job由一个ResultStage和多个ShuffleMapStage组成</strong>。</p>
+<h1 id="2-job处理流程"><a href="#2-job处理流程" class="headerlink" title="2. job处理流程"></a>2. <strong>job处理流程</strong></h1><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9AB.tmp.jpg" alt="img"><br><a href="https://github.com/ColZer/DigAndBuried/blob/master/spark/shuffle-study.md" target="_blank" rel="noopener">https://github.com/ColZer/DigAndBuried/blob/master/spark/shuffle-study.md</a></p>
+<h2 id="2-1-job生成过程"><a href="#2-1-job生成过程" class="headerlink" title="2.1. job生成过程"></a>2.1. <strong>job生成过程</strong></h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9AC.tmp.jpg" alt="img"> </p>
+<h3 id="2-1-1-job重载函数"><a href="#2-1-1-job重载函数" class="headerlink" title="2.1.1. job重载函数"></a>2.1.1. <strong>job重载函数</strong></h3><p>调用SparkContext里面的函数重载，将分区数量，需要计算的分区下标等参数设置好<br>以rdd.count为例：<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line">rdd.count</span><br><span class="line"><span class="comment">// 获取分区数</span></span><br><span class="line">sc.runJob(<span class="keyword">this</span>, <span class="type">Utils</span>.getIteratorSize _).sum</span><br><span class="line"><span class="comment">// 设置需要计算的分区</span></span><br><span class="line">runJob(rdd, func, <span class="number">0</span> until rdd.partitions.length)</span><br><span class="line"><span class="comment">// 设置需要在每个partition上执行的函数</span></span><br><span class="line">runJob(rdd, (ctx: <span class="type">TaskContext</span>, it: <span class="type">Iterator</span>[<span class="type">T</span>]) =&gt; cleanedFunc(it), partitions)</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-1-2-设置回调函数"><a href="#2-1-2-设置回调函数" class="headerlink" title="2.1.2. 设置回调函数"></a>2.1.2. <strong>设置回调函数</strong></h3><p>定义一个接收计算结果的对象数组并将其返回<br>构造一个Array,并构造一个函数对象”(index, res) =&gt; results(index) = res”继续传递给runJob函数,然后等待runJob函数运行结束,将results返回; 对这里的解释相当在runJob添加一个回调函数,将runJob的运行结果保存到Array到, 回调函数,index表示mapindex, res为单个map的运行结果<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">runJob</span></span>[<span class="type">T</span>, <span class="type">U</span>: <span class="type">ClassTag</span>](</span><br><span class="line">     rdd: <span class="type">RDD</span>[<span class="type">T</span>],</span><br><span class="line">     func: (<span class="type">TaskContext</span>, <span class="type">Iterator</span>[<span class="type">T</span>]) =&gt; <span class="type">U</span>,</span><br><span class="line">     partitions: <span class="type">Seq</span>[<span class="type">Int</span>]): <span class="type">Array</span>[<span class="type">U</span>] = &#123;</span><br><span class="line"><span class="comment">// 定义返回的结果集</span></span><br><span class="line">   <span class="keyword">val</span> results = <span class="keyword">new</span> <span class="type">Array</span>[<span class="type">U</span>](partitions.size)</span><br><span class="line"><span class="comment">// 定义resulthandler</span></span><br><span class="line">   runJob[<span class="type">T</span>, <span class="type">U</span>](rdd, func, partitions, (index, res) =&gt; results(index) = res)</span><br><span class="line"><span class="comment">// 返回计算结果</span></span><br><span class="line">   results</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-1-3-获取需要执行的excutor"><a href="#2-1-3-获取需要执行的excutor" class="headerlink" title="2.1.3. 获取需要执行的excutor"></a>2.1.3. <strong>获取需要执行的excutor</strong></h3><p>将需要执行excutor的地址和回调函数等传给DAG调度器，由DAG调度器进行具体的submitJob操作。<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">runJob</span></span>[<span class="type">T</span>, <span class="type">U</span>: <span class="type">ClassTag</span>](</span><br><span class="line">      rdd: <span class="type">RDD</span>[<span class="type">T</span>],</span><br><span class="line">      func: (<span class="type">TaskContext</span>, <span class="type">Iterator</span>[<span class="type">T</span>]) =&gt; <span class="type">U</span>,</span><br><span class="line">      partitions: <span class="type">Seq</span>[<span class="type">Int</span>],</span><br><span class="line">      resultHandler: (<span class="type">Int</span>, <span class="type">U</span>) =&gt; <span class="type">Unit</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">	<span class="comment">// 获取需要发送的excutor地址</span></span><br><span class="line">    <span class="keyword">val</span> callSite = getCallSite</span><br><span class="line">	<span class="comment">// 闭包封装，防止序列化错误</span></span><br><span class="line">    <span class="keyword">val</span> cleanedFunc = clean(func)</span><br><span class="line">	<span class="comment">// 提交给dag调度器,</span></span><br><span class="line">    dagScheduler.runJob(rdd, cleanedFunc, partitions, callSite, resultHandler, localProperties.get)</span><br><span class="line">    <span class="comment">// docheckpoint</span></span><br><span class="line">    rdd.doCheckpoint()</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>注意：<strong>dagScheduler.runJob是堵塞的操作,即直到Spark完成Job的运行之前,rdd.doCheckpoint()是不会执行的</strong><br>上异步的runJob回调用下面这个方法，里面设置了JobWaiter，用来等待job执行完毕。<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">runJob</span></span>&#123;</span><br><span class="line">...</span><br><span class="line"><span class="comment">// job提交后会返回一个jobwaiter对象</span></span><br><span class="line"><span class="keyword">val</span> waiter = submitJob(rdd, func, partitions, callSite, resultHandler, properties)</span><br><span class="line"><span class="type">ThreadUtils</span>.awaitReady(waiter.completionFuture, <span class="type">Duration</span>.<span class="type">Inf</span>)</span><br><span class="line"> waiter.completionFuture.value.get <span class="keyword">match</span> &#123;</span><br><span class="line">​      <span class="keyword">case</span> scala.util.<span class="type">Success</span>(_) =&gt;</span><br><span class="line">​		...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-1-4-将Job放入队列"><a href="#2-1-4-将Job放入队列" class="headerlink" title="2.1.4. 将Job放入队列"></a>2.1.4. <strong>将Job放入队列</strong></h3><p>给JOB分配一个ID，并将其放入队列，返回一个阻塞器，等待当前job执行完毕。将结果数据传送给handler function<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">submitJob</span></span>&#123;</span><br><span class="line"><span class="comment">// 生成JOB的ID</span></span><br><span class="line"><span class="keyword">val</span> jobId = nextJobId.getAndIncrement()</span><br><span class="line"><span class="comment">// 生成阻塞器</span></span><br><span class="line"><span class="keyword">val</span> waiter = <span class="keyword">new</span> <span class="type">JobWaiter</span>(<span class="keyword">this</span>, jobId, partitions.size, resultHandler)</span><br><span class="line"><span class="comment">// post方法的实现：eventQueue.put(event),实际上是将此job提交到了一个LinkedBlockingDeque</span></span><br><span class="line">eventProcessLoop.post(<span class="type">JobSubmitted</span>(</span><br><span class="line">      jobId, rdd, func2, partitions.toArray, callSite, waiter,</span><br><span class="line">      <span class="type">SerializationUtils</span>.clone(properties)))</span><br><span class="line">&#125;</span><br><span class="line">waiter</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-2-job监听"><a href="#2-2-job监听" class="headerlink" title="2.2. job监听"></a>2.2. <strong>job监听</strong></h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9AD.tmp.jpg" alt="img"> </p>
+<h3 id="2-2-1-监听触发"><a href="#2-2-1-监听触发" class="headerlink" title="2.2.1. 监听触发"></a>2.2.1. <strong>监听触发</strong></h3><p>在提交job时，我们将job放到了一个LinkedBlockingDeque队列，然后由EventLoop<br>负责接收处理请求，触发job的提交，产生一个finalStage.<br>EventLoop是在jobScheduler中启动的时候在JobGenerator中启动的<br>当从队列中拉去job时，开创建ResultStage:<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">EventLoop</span></span></span><br><span class="line"><span class="class"><span class="title">override</span> <span class="title">def</span> <span class="title">run</span>(<span class="params"></span>)</span>: <span class="type">Unit</span> = &#123;</span><br><span class="line">​      <span class="keyword">try</span> &#123;</span><br><span class="line">​        <span class="keyword">while</span> (!stopped.get) &#123;</span><br><span class="line">​		 <span class="comment">// 拉去job</span></span><br><span class="line">​          <span class="keyword">val</span> event = eventQueue.take()</span><br><span class="line">​          <span class="keyword">try</span> &#123;</span><br><span class="line">​			<span class="comment">// 触发创建stage</span></span><br><span class="line">​            onReceive(event)</span><br><span class="line">​	...</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">doOnReceive</span></span>&#123;</span><br><span class="line">​	<span class="keyword">case</span> <span class="type">JobSubmitted</span>(jobId, rdd, func, partitions, callSite, listener, properties) =&gt;</span><br><span class="line">​      dagScheduler.handleJobSubmitted(jobId, rdd, func, partitions, callSite, listener, properties)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-2-2-初始化job和stage"><a href="#2-2-2-初始化job和stage" class="headerlink" title="2.2.2. 初始化job和stage"></a>2.2.2. <strong>初始化job和stage</strong></h3><p>创建job：根据JobId，finalStage,excutor地址,job状态监听的JobListener,task的属性properties等生成job,并把job放入Map中记录。<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="comment">// class DAGScheduler</span></span><br><span class="line"><span class="keyword">private</span>[scheduler] <span class="function"><span class="keyword">def</span> <span class="title">handleJobSubmitted</span></span>() &#123;</span><br><span class="line"><span class="comment">// 以不同形式的hashMap存放job</span></span><br><span class="line"> jobIdToStageIds = <span class="keyword">new</span> <span class="type">HashMap</span>[<span class="type">Int</span>, <span class="type">HashSet</span>[<span class="type">Int</span>]]</span><br><span class="line">stageIdToStage = <span class="keyword">new</span> <span class="type">HashMap</span>[<span class="type">Int</span>, <span class="type">Stage</span>]  </span><br><span class="line">jobIdToActiveJob = <span class="keyword">new</span> <span class="type">HashMap</span>[<span class="type">Int</span>, <span class="type">ActiveJob</span>] </span><br><span class="line"><span class="comment">// 初始化finalStage</span></span><br><span class="line"><span class="keyword">var</span> finalStage: <span class="type">ResultStage</span> = 	createResultStage(finalRDD, func, partitions, jobId, callSite)</span><br><span class="line">   <span class="comment">// 初始化job</span></span><br><span class="line">​    <span class="keyword">val</span> job = <span class="keyword">new</span> <span class="type">ActiveJob</span>(jobId, finalStage, callSite, listener, properties)</span><br><span class="line">​    clearCacheLocs()</span><br><span class="line">​    jobIdToActiveJob(jobId) = job</span><br><span class="line">​    activeJobs += job</span><br><span class="line">​    finalStage.setActiveJob(job)</span><br><span class="line">​    <span class="keyword">val</span> stageIds = jobIdToStageIds(jobId).toArray</span><br><span class="line">​    <span class="keyword">val</span> stageInfos = stageIds.flatMap(id =&gt; stageIdToStage.get(id).map(_.latestInfo))</span><br><span class="line">​    **listenerBus.post(**</span><br><span class="line">​      **<span class="type">SparkListenerJobStart</span>(job.jobId, jobSubmissionTime, stageInfos, properties))**</span><br><span class="line">   <span class="comment">// 提交finalStage，计算时会判断其之前是否存在shuffleStage，如果存在会优先计算shuffleStage，最后再计算finalStage</span></span><br><span class="line">​    **submitStage(finalStage)**</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-2-3-提交stage"><a href="#2-2-3-提交stage" class="headerlink" title="2.2.3. 提交stage"></a>2.2.3. <strong>提交stage</strong></h3><p><strong>参见:</strong> <a href="#_MapOutputTrackerMaster">MapOutputTrackerMaster</a><br>stage的状态分为三类：计算失败，计算完成和未计算完成，迭代的去计算完成父stage后，就可以到下一步，将stage转换到具体的task进行执行。<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DAGScheduler</span></span></span><br><span class="line"><span class="class"><span class="title">private</span>[scheduler] <span class="title">def</span> <span class="title">handleJobSubmitted</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line"> <span class="keyword">var</span> finalStage: <span class="type">ResultStage</span> = 	createResultStage(finalRDD, func, partitions, jobId, callSite)</span><br><span class="line">​    ...</span><br><span class="line">​    submitStage(finalStage)</span><br><span class="line">  &#125;</span><br><span class="line"><span class="comment">// 迭代的去判断父stage是否全部计算完成</span></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">submitStage</span></span>(stage: <span class="type">Stage</span>) &#123;</span><br><span class="line"><span class="keyword">if</span>(jobId.isDefined)&#123;</span><br><span class="line"><span class="keyword">val</span> missing = getMissingParentStages(stage).sortBy(_.id)</span><br><span class="line"><span class="keyword">if</span> (missing.isEmpty) &#123;</span><br><span class="line">   <span class="comment">// 父stage已经计算完成，可以开始当前计算</span></span><br><span class="line">​	submitMissingTasks(stage, jobId.get)</span><br><span class="line">​    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">​	<span class="comment">//  父stage的map操作未完成，继续进行迭代</span></span><br><span class="line">​          <span class="keyword">for</span> (parent &lt;- missing) &#123;</span><br><span class="line">​            submitStage(parent)</span><br><span class="line">​          &#125;</span><br><span class="line">​          waitingStages += stage</span><br><span class="line">​     &#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 获取未计算完成的stage</span></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">getMissingParentStages</span></span>(stage: <span class="type">Stage</span>): <span class="type">List</span>[<span class="type">Stage</span>] = &#123;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">for</span> (dep &lt;- rdd.dependencies) &#123;</span><br><span class="line">   dep <span class="keyword">match</span> &#123;</span><br><span class="line">​      <span class="keyword">case</span> shufDep: <span class="type">ShuffleDependency</span>=&gt;</span><br><span class="line"><span class="comment">// 判断当前stage是否计算完成</span></span><br><span class="line">​	 <span class="keyword">val</span> mapStage = getOrCreateShuffleMapStage(shufDep, stage.firstJobId)</span><br><span class="line">​         <span class="keyword">if</span> (!mapStage.isAvailable) &#123;</span><br><span class="line">​                  missing += mapStage</span><br><span class="line">​          &#125;           </span><br><span class="line">​       <span class="keyword">case</span> narrowDep: <span class="type">NarrowDependency</span>[_] =&gt;</span><br><span class="line">​             waitingForVisit.push(narrowDep.rdd)</span><br><span class="line">​      &#125;</span><br><span class="line">...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-3-stage转task"><a href="#2-3-stage转task" class="headerlink" title="2.3. stage转task"></a>2.3. <strong>stage转task</strong></h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9BE.tmp.jpg" alt="img"><br>首先利于上面说到的Stage知识获取所需要进行计算的task的分片;因为该Stage有些分片可能已经计算完成了;然后将Task运行依赖的RDD,Func,shuffleDep 进行序列化,通过broadcast发布出去; 然后创建Task对象,提交给taskScheduler调度器进行运行</p>
+<h3 id="2-3-1-过滤需要执行的分片"><a href="#2-3-1-过滤需要执行的分片" class="headerlink" title="2.3.1. 过滤需要执行的分片"></a>2.3.1. <strong>过滤需要执行的分片</strong></h3><p><strong>参见:</strong> <a href="#___task__">获取task分片</a><br>对Stage进行遍历所有需要运行的Task分片;<br>原因：存在部分task失败之类的情况,或者task运行结果所在的BlockManager被删除了,就需要针对特定分片进行重新计算;即所谓的恢复和重算机制;<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DAGScheduler</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">submitMissingTasks</span></span>(stage, jobId)&#123;</span><br><span class="line">​	<span class="keyword">val</span> partitionsToCompute: <span class="type">Seq</span>[<span class="type">Int</span>] = stage.findMissingPartitions()</span><br><span class="line">​	<span class="keyword">val</span> properties = jobIdToActiveJob(jobId).properties</span><br><span class="line">​	runningStages += stage</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-3-2-序列化和广播"><a href="#2-3-2-序列化和广播" class="headerlink" title="2.3.2. 序列化和广播"></a>2.3.2. <strong>序列化和广播</strong></h3><p>对Stage的运行依赖进行序列化并broadcast给excutors(如果不序列化在数据传输过程中可能出错)<br>对ShuffleStage和FinalStage所序列化的内容有所不同：<strong>对于ShuffleStage序列化的是RDD和shuffleDep;而对FinalStage序列化的是RDD和Func</strong><br>对于FinalStage我们知道,每个Task运行过程中,需要知道RDD和运行的函数,比如我们这里讨论的Count实现的Func;而对于ShuffleStage,ShuffleDependency记录了父RDD，排序方式，聚合器等，reduce端需要获取这些参数进行初始化和计算。<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DAGScheduler</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">submitMissingTasks</span></span>(stage, jobId)&#123;</span><br><span class="line">​	...</span><br><span class="line">​      <span class="comment">// consistent view of both variables.</span></span><br><span class="line"><span class="type">RDDCheckpointData</span>.synchronized &#123;</span><br><span class="line">​        taskBinaryBytes = stage <span class="keyword">match</span> &#123;</span><br><span class="line">​          <span class="keyword">case</span> stage: <span class="type">ShuffleMapStage</span> =&gt;</span><br><span class="line">​            <span class="type">JavaUtils</span>.bufferToArray(</span><br><span class="line">​              closureSerializer.serialize((stage.rdd, stage.shuffleDep): <span class="type">AnyRef</span>))</span><br><span class="line">​          <span class="keyword">case</span> stage: <span class="type">ResultStage</span> =&gt;           <span class="type">JavaUtils</span>.bufferToArray(closureSerializer.serialize((stage.rdd, stage.func): <span class="type">AnyRef</span>))</span><br><span class="line">​        &#125;</span><br><span class="line">​        partitions = stage.rdd.partitions</span><br><span class="line">​      &#125;</span><br><span class="line">​      taskBinary = sc.broadcast(taskBinaryBytes)</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-3-3-构造task对象"><a href="#2-3-3-构造task对象" class="headerlink" title="2.3.3. 构造task对象"></a>2.3.3. <strong>构造task对象</strong></h3><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9BF.tmp.jpg" alt="img"><br>针对每个需要计算的分片构造一个Task对象，<br>对于ResultTask就是在分片上调用我们的Func,而ShuffleMapTask按照ShuffleDep进行 MapOut</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DAGScheduler</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">submitMissingTasks</span></span>(stage, jobId)&#123;</span><br><span class="line">​	...</span><br><span class="line"> <span class="keyword">val</span> tasks: <span class="type">Seq</span>[<span class="type">Task</span>[_]] = <span class="keyword">try</span> &#123;</span><br><span class="line">​      <span class="keyword">val</span> serializedTaskMetrics = closureSerializer.serialize(stage.latestInfo.taskMetrics).array()</span><br><span class="line">​      stage <span class="keyword">match</span> &#123;</span><br><span class="line">​		<span class="comment">// 一个stage会产生多个task任务</span></span><br><span class="line">​        <span class="keyword">case</span> stage: <span class="type">ShuffleMapStage</span> =&gt;</span><br><span class="line">​          partitionsToCompute.map &#123; id =&gt;</span><br><span class="line">​            <span class="keyword">new</span> <span class="type">ShuffleMapTask</span>()</span><br><span class="line">​          &#125;</span><br><span class="line">​        <span class="keyword">case</span> stage: <span class="type">ResultStage</span> =&gt;</span><br><span class="line">​          partitionsToCompute.map &#123; id =&gt;</span><br><span class="line">​            <span class="keyword">new</span> <span class="type">ResultTask</span>()</span><br><span class="line">​          &#125;</span><br><span class="line">​      &#125;</span><br></pre></td></tr></table></figure>
+<h4 id="2-3-3-1-ShuffleMapTask"><a href="#2-3-3-1-ShuffleMapTask" class="headerlink" title="2.3.3.1. ShuffleMapTask"></a>2.3.3.1. <strong>ShuffleMapTask</strong></h4><h4 id="2-3-3-2-ResultTask"><a href="#2-3-3-2-ResultTask" class="headerlink" title="2.3.3.2. ResultTask"></a>2.3.3.2. <strong>ResultTask</strong></h4><h3 id="2-3-4-taskScheduler调度task"><a href="#2-3-4-taskScheduler调度task" class="headerlink" title="2.3.4. taskScheduler调度task"></a>2.3.4. <strong>taskScheduler调度task</strong></h3><p>调用taskScheduler将task提交给Spark进行调度<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DAGScheduler</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">submitMissingTasks</span></span>(stage, jobId)&#123;</span><br><span class="line">	...</span><br><span class="line"><span class="keyword">if</span> (tasks.size &gt; <span class="number">0</span>) &#123;</span><br><span class="line">   <span class="comment">// 将taskSet发送给 taskScheduler</span></span><br><span class="line">	taskScheduler.submitTasks(<span class="keyword">new</span> <span class="type">TaskSet</span>(</span><br><span class="line">        tasks.toArray, stage.id, stage.latestInfo.attemptId, jobId, properties))</span><br><span class="line">      stage.latestInfo.submissionTime = <span class="type">Some</span>(clock.getTimeMillis())</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     markStageAsFinished(stage, <span class="type">None</span>)</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-4-获取运行结果"><a href="#2-4-获取运行结果" class="headerlink" title="2.4. 获取运行结果"></a>2.4. <strong>获取运行结果</strong></h2><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9C0.tmp.jpg" alt="img"><br>DAGScheduler接收到DAGSchedulerEvent后判断其类型是TaskCompletion，不同的stage的实现方式不一样，shuffle的实现更复杂一点</p>
+<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"> <span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">doOnReceive</span></span>(event: <span class="type">DAGSchedulerEvent</span>): <span class="type">Unit</span> = event <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> completion: <span class="type">CompletionEvent</span> =&gt;</span><br><span class="line">dagScheduler.handleTaskCompletion(completion)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span>[scheduler] <span class="function"><span class="keyword">def</span> <span class="title">handleTaskCompletion</span></span>(event: <span class="type">CompletionEvent</span>) &#123;</span><br><span class="line">event.reason <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">Success</span> =&gt;</span><br><span class="line">​      task <span class="keyword">match</span> &#123;</span><br><span class="line">​      <span class="keyword">case</span> rt: <span class="type">ResultTask</span>[_, _] =&gt;</span><br><span class="line">​			<span class="comment">// 调用jobWaiter的taskSucced通知结果</span></span><br><span class="line">​			job.listener.taskSucceeded</span><br><span class="line">​	 <span class="keyword">case</span> smt: <span class="type">ShuffleMapTask</span> =&gt;</span><br><span class="line">​			<span class="comment">// 调用outputTracker</span></span><br><span class="line">​		mapOutputTracker.registerMapOutput</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="2-4-1-ResultStage"><a href="#2-4-1-ResultStage" class="headerlink" title="2.4.1. ResultStage"></a>2.4.1. <strong>ResultStage</strong></h3><p>当计算完毕后，JobWaiter同步调用resultHandler处理task返回的结果。<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span>[scheduler] <span class="function"><span class="keyword">def</span> <span class="title">handleTaskCompletion</span></span>(event: <span class="type">CompletionEvent</span>) &#123;</span><br><span class="line">event.reason <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">Success</span> =&gt;</span><br><span class="line">      task <span class="keyword">match</span> &#123;</span><br><span class="line">      <span class="keyword">case</span> rt: <span class="type">ResultTask</span>[_, _] =&gt;</span><br><span class="line">			<span class="comment">// 调用jobWaiter的taskSucced通知结果</span></span><br><span class="line">			job.listener.taskSucceeded(</span><br><span class="line">			rt.outputId, event.result)</span><br><span class="line">	 <span class="keyword">case</span> smt: <span class="type">ShuffleMapTask</span> =&gt;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// jobWaiter是JobListner的子类</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">JobWaiter</span> <span class="keyword">extends</span> <span class="title">JobListener</span></span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">taskSucceeded</span></span>(index: <span class="type">Int</span>, result: <span class="type">Any</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    synchronized &#123;</span><br><span class="line">      resultHandler(index, result.asInstanceOf[<span class="type">T</span>])</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (finishedTasks.incrementAndGet() == totalTasks) &#123;</span><br><span class="line">      jobPromise.success(())</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="2-4-2-ShuffleMapStage"><a href="#2-4-2-ShuffleMapStage" class="headerlink" title="2.4.2. ShuffleMapStage"></a>2.4.2. <strong>ShuffleMapStage</strong></h3><p><strong>参见:</strong> <a href="#_MapStatus______">MapStatus的注册和获取</a><br>将运行结果(mapStatus)传送给outputTrancker<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span>[scheduler] <span class="function"><span class="keyword">def</span> <span class="title">handleTaskCompletion</span></span>(event: <span class="type">CompletionEvent</span>) &#123;</span><br><span class="line">event.reason <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">Success</span> =&gt;</span><br><span class="line">​      task <span class="keyword">match</span> &#123;</span><br><span class="line">​      <span class="keyword">case</span> rt: <span class="type">ResultTask</span>[_, _] =&gt;</span><br><span class="line">​	 <span class="keyword">case</span> smt: <span class="type">ShuffleMapTask</span> =&gt;</span><br><span class="line">​			<span class="comment">// </span></span><br><span class="line">​		mapOutputTracker.registerMapOutput(</span><br><span class="line">​                shuffleStage.shuffleDep.shuffleId, 				smt.partitionId, status)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="2-5-doCheckPoint"><a href="#2-5-doCheckPoint" class="headerlink" title="2.5. doCheckPoint"></a>2.5. <strong>doCheckPoint</strong></h2><p>job执行完毕后执行</p>
+<h1 id="3-stage"><a href="#3-stage" class="headerlink" title="3. stage"></a>3. <strong>stage</strong></h1><p><img src="https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/sparkcore/wpsA9C1.tmp.jpg" alt="img"> </p>
+<ol>
+<li>一组含有相同计算函数的任务集合，这些任务组合成了一个完整的job</li>
+<li>stage分为两种：FinalStage和shuffleStage</li>
+<li>stage中包含了jobId,对于FIFO规则，jobId越小的优先级越高</li>
+<li>为了保证容错性，一个stage可以被重复执行，所以在web UI上有可能看见多个stage的信息，取最新更新时间的即可</li>
+<li>组成：<figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span>[scheduler] <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Stage</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    val id: <span class="type">Int</span>, // stageId</span></span></span><br><span class="line"><span class="class"><span class="params">    val rdd: <span class="type">RDD</span>[_],// <span class="type">RDD</span> that this stage runs on</span></span></span><br><span class="line"><span class="class"><span class="params">    val numTasks: <span class="type">Int</span>,// task数量</span></span></span><br><span class="line"><span class="class"><span class="params">    val parents: <span class="type">List</span>[<span class="type">Stage</span>],// 父stage</span></span></span><br><span class="line"><span class="class"><span class="params">    val firstJobId: <span class="type">Int</span>,//当前stage上<span class="type">JobId</span></span></span></span><br><span class="line"><span class="class"><span class="params">    val callSite: <span class="type">CallSite</span>// 生成<span class="type">RDD</span>存放位置</span></span></span><br><span class="line"><span class="class"><span class="params"></span>)  <span class="keyword">extends</span> <span class="title">Logging</span> </span>&#123;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h2 id="3-1-ShuffleMapStage"><a href="#3-1-ShuffleMapStage" class="headerlink" title="3.1. ShuffleMapStage"></a>3.1. <strong>ShuffleMapStage</strong></h2><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShuffleMapStage</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    val shuffleDep: <span class="type">ShuffleDependency</span>[_, _, _],</span></span></span><br><span class="line"><span class="class"><span class="params">    mapOutputTrackerMaster: <span class="type">MapOutputTrackerMaster</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">Stage</span>(<span class="params">id, rdd, numTasks, parents, firstJobId, callSite</span>)</span>&#123;</span><br><span class="line"><span class="comment">// 判断当前stage是否可用</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">isAvailable</span></span>: <span class="type">Boolean</span> = numAvailableOutputs == numPartitions</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="3-1-1-ShuffleMapTask"><a href="#3-1-1-ShuffleMapTask" class="headerlink" title="3.1.1. ShuffleMapTask"></a>3.1.1. <strong>ShuffleMapTask</strong></h3><p>每个运行在Executor上的Task, 通过SparkEnv获取shuffleManager对象, 然后调用getWriter来当前MapID=partitionId的一组Writer. 然后将rdd的迭代器传递给writer.write函数, 由每个Writer的实现去实现具体的write操作;<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShuffleMapTask</span> <span class="keyword">extends</span> <span class="title">Task</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">def runTask(context: <span class="type">TaskContext</span></span>)</span>: <span class="type">MapStatus</span> = &#123;</span><br><span class="line">​	<span class="comment">// 反序列化接收到的数据</span></span><br><span class="line">​    <span class="keyword">val</span> (rdd, dep) = closureSerializer.deserialize(</span><br><span class="line">​      <span class="type">ByteBuffer</span>.wrap(taskBinary.value))</span><br><span class="line"><span class="keyword">var</span> writer: <span class="type">ShuffleWriter</span>[<span class="type">Any</span>, <span class="type">Any</span>] = <span class="literal">null</span></span><br><span class="line"><span class="keyword">val</span> manager = <span class="type">SparkEnv</span>.get.shuffleManager</span><br><span class="line"><span class="comment">// 调用ShuffleManager的getWriter方法获取一组writer</span></span><br><span class="line"> writer = manager.getWriter[<span class="type">Any</span>, <span class="type">Any</span>](dep.shuffleHandle, partitionId, context)</span><br><span class="line"><span class="comment">// 遍历RDD进行write</span></span><br><span class="line"> writer.write(rdd.iterator(partition, context).asInstanceOf[<span class="type">Iterator</span>[_ &lt;: <span class="type">Product2</span>[<span class="type">Any</span>, <span class="type">Any</span>]]])</span><br><span class="line">writer.stop(success = <span class="literal">true</span>).get</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>上面代码中，在调用rdd的iterator()方法时，会根据RDD实现类的compute方法指定的处理逻辑对数据进行处理，当然，如果该Partition对应的数据已经处理过并存储在MemoryStore或DiskStore，直接通过BlockManager获取到对应的Block数据，而无需每次需要时重新计算。然后，write()方法会将已经处理过的Partition数据输出到磁盘文件。<br>在Spark Shuffle过程中，每个ShuffleMapTask会通过配置的ShuffleManager实现类对应的ShuffleManager对象（实际上是在SparkEnv中创建），根据已经注册的ShuffleHandle，获取到对应的ShuffleWriter对象，然后通过ShuffleWriter对象将Partition数据写入内存或文件。</p>
+<h3 id="3-1-2-获取task分片"><a href="#3-1-2-获取task分片" class="headerlink" title="3.1.2. 获取task分片"></a>3.1.2. <strong>获取task分片</strong></h3><p><strong>参见:</strong> <a href="#__________">过滤需要执行的分片</a><br>返回需要计算的partition信息<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ShuffleMapStage</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">findMissingPartitions</span></span>(): <span class="type">Seq</span>[<span class="type">Int</span>] = &#123;</span><br><span class="line">​    mapOutputTrackerMaster</span><br><span class="line">​      .findMissingPartitions(shuffleDep.shuffleId)</span><br><span class="line">​      .getOrElse(<span class="number">0</span> until numPartitions)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="3-2-ResultStage"><a href="#3-2-ResultStage" class="headerlink" title="3.2. ResultStage"></a>3.2. <strong>ResultStage</strong></h2><h3 id="3-2-1-ResultTask"><a href="#3-2-1-ResultTask" class="headerlink" title="3.2.1. ResultTask"></a>3.2.1. <strong>ResultTask</strong></h3><p><strong>参见:</strong> <a href="#_reduce___">reduce端获取</a><br>ResultTask不需要进行写操作。直接将计算结果返回。<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ResultTask</span> <span class="keyword">extends</span> <span class="title">Task</span> </span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">runTask</span></span>(context: <span class="type">TaskContext</span>): <span class="type">U</span> = &#123;</span><br><span class="line">	<span class="comment">// 对RDD和函数进行反序列化</span></span><br><span class="line">	<span class="keyword">val</span> (rdd, func) = ser.deserialize(</span><br><span class="line">      <span class="type">ByteBuffer</span>.wrap(taskBinary.value)</span><br><span class="line">	<span class="comment">// 调用函数进行计算</span></span><br><span class="line">	func(context, rdd.iterator(partition, context))</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// RDD的iterator函数，</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RDD</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">iterator</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">T</span>] = &#123;</span><br><span class="line">    <span class="keyword">if</span> (storageLevel != <span class="type">StorageLevel</span>.<span class="type">NONE</span>) &#123;</span><br><span class="line">      getOrCompute(split, context)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      computeOrReadCheckpoint(split, context)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="3-2-2-获取task分片"><a href="#3-2-2-获取task分片" class="headerlink" title="3.2.2. 获取task分片"></a>3.2.2. <strong>获取task分片</strong></h3><p>返回需要计算的partition信息,不需要经过tracker,在提交Job的时候会将其保存在ResultStage<br><figure class="highlight scala"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">DAGScheduler</span></span>&#123;</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">handleJobSubmitted</span></span>()&#123;</span><br><span class="line"><span class="comment">// 定义resultStage</span></span><br><span class="line">finalStage = createResultStage(finalRDD, func, partitions, jobId, callSite)</span><br><span class="line"><span class="comment">// 将job传递给resultStage</span></span><br><span class="line">finalStage.setActiveJob(job)</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ResultStage</span></span>&#123;</span><br><span class="line"><span class="comment">// 过滤掉已经完成的</span></span><br><span class="line">findMissingPartitions(): <span class="type">Seq</span>[<span class="type">Int</span>] = &#123;</span><br><span class="line">    <span class="keyword">val</span> job = activeJob.get</span><br><span class="line">    (<span class="number">0</span> until job.numPartitions).filter(id =&gt; !job.finished(id))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+    
+  </div>
+
+</article>
+
+
+   
+  <div class="text-center donation">
+    <div class="inner-donation">
+      <span class="btn-donation">支持一下</span>
+      <div class="donation-body">
+        <div class="tip text-center">扫一扫，支持sustcoder</div>
+        <ul>
+        
+          <li class="item">
+            
+              <span>微信扫一扫</span>
+            
+            <img src="/images/qr-wechat.png" alt="">
+          </li>
+        
+          <li class="item">
+            
+              <span>支付宝扫一扫</span>
+            
+            <img src="/images/qr-alipay.png" alt="">
+          </li>
+        
+        </ul>
+      </div>
+    </div>
+  </div>
+
+
+   
+  <div class="box-prev-next clearfix">
+    <a class="show pull-left" href="/2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-block/">
+        <i class="icon icon-angle-left"></i>
+    </a>
+    <a class="hide pull-right" href="/">
+        <i class="icon icon-angle-right"></i>
+    </a>
+  </div>
+
+
+
+
+
+   
+      <div class="git"></div>
+   
+</div>
+
+
+  <a id="backTop" class="back-top">
+    <i class="icon-angle-up"></i>
+  </a>
+
+
+
+
+  <div class="modal" id="modal">
+  <span id="cover" class="cover hide"></span>
+  <div id="modal-dialog" class="modal-dialog hide-dialog">
+    <div class="modal-header">
+      <span id="close" class="btn-close">关闭</span>
+    </div>
+    <hr>
+    <div class="modal-body">
+      <ul class="list-toolbox">
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/blog/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              博客
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/category/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              分类
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/tag/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              标签
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/link/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              友链
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/about/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              关于
+            </a>
+          </li>
+        
+          <li class="item-toolbox">
+            <a
+              class="CIRCLE"
+              href="/search/"
+              rel="noopener noreferrer"
+              target="_self"
+              >
+              搜索
+            </a>
+          </li>
+        
+      </ul>
+
+    </div>
+  </div>
+</div>
+
+
+
+  
+      <div class="fexo-comments comments-post">
+    
+  <section class="disqus-comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    </div>
+  </section>
+
+  <script>
+    var disqus_shortname = 'forsigner';
+    
+    var disqus_url = 'https://sustcoder.github.io/2019/01/14/2018-12-01-sparkCore-sorceCodeAnalysis-Job/';
+    
+    (function(){
+      var dsq = document.createElement('script');
+      dsq.type = 'text/javascript';
+      dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+
+  <script id="dsq-count-scr" src="//forsigner.disqus.com/count.js" async></script>
+
+
+
+    
+
+    
+    
+
+    
+
+    
+    
+
+  </div>
+
+  
+
+  <script type="text/javascript">
+  function loadScript(url, callback) {
+    var script = document.createElement('script')
+    script.type = 'text/javascript';
+
+    if (script.readyState) { //IE
+      script.onreadystatechange = function() {
+        if (script.readyState == 'loaded' ||
+          script.readyState == 'complete') {
+          script.onreadystatechange = null;
+          callback();
+        }
+      };
+    } else { //Others
+      script.onload = function() {
+        callback();
+      };
+    }
+
+    script.src = url;
+    document.getElementsByTagName('head')[0].appendChild(script);
+  }
+
+  window.onload = function() {
+    loadScript('/js/bundle.js?235683', function() {
+      // load success
+    });
+  }
+</script>
+
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        tex2jax: {
+            inlineMath: [ ["$","$"], ["\\(","\\)"] ],
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+            processEscapes: true
+        }
+    });
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax();
+        for (var i = 0; i < all.length; ++i)
+            all[i].SourceElement().parentNode.className += ' has-jax';
+    });
+</script>
+<script src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+</body>
+</html>
