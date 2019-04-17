@@ -49,7 +49,7 @@ category: [kafka]
 
 当需要增加broker结点时，新增的broker会向zookeeper注册，而producer及consumer会根据注册在zookeeper上的watcher感知这些变化，并及时作出调整。
 
-![img](E:\data\oss\kafka\kafka1.png)
+![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka1.png)
 
 ## kafka名词解释
 
@@ -118,7 +118,7 @@ Topic相当于传统消息系统MQ中的一个队列queue，producer端发送的
 - Broker不保存订阅者的状态，由订阅者自己保存
 - Broker的无状态特点导致其需要定期删除数据以及当订阅者故障时需要从最小offset重新消费，也就是不能够保证exactly once
 
-![](E:\data\oss\kafka\kafka6.png)
+![](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka6.png)
 
 
 ## Consumer与topic关系
@@ -129,7 +129,7 @@ Topic相当于传统消息系统MQ中的一个队列queue，producer端发送的
 
 - kafka只能保证一个partition中的消息被某个consumer消费时是顺序的；事实上，从Topic角度来说,当有多个partitions时,消息仍不是全局有序的。
 
-![img](E:\data\oss\kafka\kafka2.png)
+![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka2.png)
 
 ## Kafka消息的分发
 
@@ -145,7 +145,7 @@ Producer客户端负责消息的分发
 
 - 在producer端的配置文件中,开发者可以指定partition路由的方式。
 
-![message](E:\data\oss\kafka\message.png)
+![message](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/message.png)
 
 ## Producer消息发送的应答机制 
 
@@ -171,7 +171,7 @@ Producer客户端负责消息的分发
 /consumers/[group_id]/owners/[topic]/[partition_id] ## 表明parttion的消费者
 ```
 
-![img](E:\data\oss\kafka\kafka4.png)
+![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka4.png)
 
 [查看更多](https://blog.csdn.net/ouyang111222/article/details/51094912)
 
@@ -181,11 +181,9 @@ Producer客户端负责消息的分发
 
 控制器在竞选成功后会初始化一个上下文，并将上下文信息同步给其他broker节点。对于新增事件，统一维护在线程安全的linkedblockingQueue中，然后按照FIFO的原则顺序的处理这些事件，维护多线程的安全。
 
-![](E:\data\oss\kafka\kafka8.png)
+![](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka8.png)
 
 [查看更多](https://blog.csdn.net/u013256816/article/details/80865540)
-
-
 
 ## 消息可靠性
 
@@ -236,8 +234,6 @@ page cache的调优
 - 调节内核的文件预取(prefetch)：文件预取是指将数据从磁盘读取到page cache中，防止出现缺页中断(page fault)而阻塞。
 
 
-
-
 ### topic中partition存储分布
 
 假设实验环境中Kafka集群只有一个broker，xxx/message-folder为数据文件存储根目录，在Kafka broker中server.properties文件配置(参数log.dirs=xxx/message-folder)，
@@ -270,7 +266,7 @@ xxx/message-folder  // 数据文件存储根目录
 - **segment file组成：由2大部分组成，分别为index file和data file**，此2个文件一一对应，成对出现，后缀".index"和“.log”分别表示为segment索引文件、数据文件.
 - segment文件命名规则：partion全局的第一个segment从0开始，后续**每个segment文件名为上一个全局partion的最大offset(偏移message数)**。数值最大为64位long大小，19位数字字符长度，没有数字用0填充。
 
-![kafka5](E:\data\oss\kafka\kafka5.png)
+![kafka5](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka5.png)
 
 segment中index<—->data file对应关系物理结构:
 
@@ -278,7 +274,7 @@ index : message序号,物理偏移地址
 
 log: 
 
-![kafka5](E:\data\oss\kafka\kafka7.png)
+![kafka5](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka7.png)
 
 
 
@@ -312,14 +308,12 @@ MessageSet是由多条记录组成的，而不是消息，这就决定了一个M
 
 具体地说，对于Kafka来说，可以对一个MessageSet做为整体压缩，把压缩后得到的字节数组作为一条Message的value。于是，Message既可以表示未压缩的单条消息，也可以表示压缩后的MessageSet。
 
-
-
 从0.8.x版本开始到现在的1.1.x版本，Kafka的消息格式也经历了3个版本。
 
 **v0版本**
 对于Kafka消息格式的第一个版本，我们把它称之为v0，在Kafka 0.10.0版本之前都是采用的这个消息格式。注意如无特殊说明，我们只讨论消息未压缩的情形。 
 
-![img](E:\data\oss\kafka\kafka3.png)
+![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/kafka/kafka3.png)
 
 
 上左图中的“RECORD”部分就是v0版本的消息格式，大多数人会把左图中的整体，即包括offset和message size字段都都看成是消息，因为每个Record（v0和v1版）必定对应一个offset和message size。每条消息都一个offset用来标志它在partition中的偏移量，这个offset是逻辑值，而非实际物理偏移值，message size表示消息的大小，这两者的一起被称之为日志头部（LOG_OVERHEAD），固定为12B。LOG_OVERHEAD和RECORD一起用来描述一条消息。与消息对应的还有消息集的概念，消息集中包含一条或者多条消息，消息集不仅是存储于磁盘以及在网络上传输（Produce & Fetch）的基本形式，而且是kafka中压缩的基本单元，详细结构参考上图。

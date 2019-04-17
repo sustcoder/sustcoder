@@ -10,16 +10,20 @@ category: [spark]
 
 ## 1.1 什么是RDD
 
+从三方面阐述什么事RDD，即RDD的背景，定义和特点。
+
+rdd的产生是为了提高计算速度，提高比MapReduce更加灵活的操作，以及更好的容错方式。为了实现这三个目标，RDD设置成了一个弹性分布式数据集，但是其并不记录数据，而是记录了数据的转换过程，并且将整个转换过程序列化后，在多个机器上对RDD的不同partition进行并行计算。这种方式相比传统的记录数据检查点或者更新情况而言，在集群中有更高效的数据传输。通过缓存机制可以减少转换操作的计算次数，通过血缘关系来解决数据丢失问题。因此RDD具备了：只读，分片，分区，并行计算，持久化和容错的特点。
+
 ### 1.1.1 产生背景
 
-当初设计RDD主要是为了解决三个问题：
+当初设计RDD主要是为了解决三个问题：提供计算速度，提供比MapReduce更灵活的操作，通过lineage实现容错。
 
-- **Fast**: Spark之前的Hadoop用的是MapReduce的编程模型，没有很好的利用分布式内存系统，中间结果都需要保存到external disk，运行效率很低。RDD模型是in-memory computing的，中间结果不需要被物化（materialized），它的**persistence**机制，可以保存中间结果重复使用，对需要迭代运算的机器学习应用和交互式数据挖掘应用，加速显著。Spark快还有一个原因是开头提到过的**Delay Scheduling**机制，它得益于RDD的Dependency设计。
-- **General: MapReduce**编程模型只能提供有限的运算种类（Map和Reduce），RDD希望支持更广泛更多样的operators（map，flatMap，filter等等），然后用户可以任意地组合他们。
+- **Fast**:提高计算速度。 Spark之前的Hadoop用的是MapReduce的编程模型，没有很好的利用分布式内存系统，中间结果都需要保存到external disk，运行效率很低。RDD模型是in-memory computing的，中间结果不需要被物化（materialized），它的**persistence**机制，可以保存中间结果重复使用，**对需要迭代运算的机器学习应用和交互式数据挖掘应用，加速显著**。Spark快还有一个原因是开头提到过的**Delay Scheduling**机制，它得益于RDD的Dependency设计。
+- **General**: 提供比MapReduce更灵活的操作。编程模型只能提供有限的运算种类（Map和Reduce），RDD希望支持更广泛更多样的operators（map，flatMap，filter等等），然后用户可以任意地组合他们。
 
 > The ability of RDDs to accommodate computing needs that were previously met only by introducing new frameworks is, we believe, the most credible evidence of the power of the RDD abstraction.
 
-- **Fault tolerance**: 其他的in-memory storage on clusters，基本单元是可变的，用细粒度更新（**fine-grained updates**）方式改变状态，如改变table/cell里面的值，这种模型的容错只能通过复制多个数据copy，需要传输大量的数据，容错效率低下。而RDD是**不可变的（immutable）**，通过粗粒度变换（**coarse-grained transformations**），比如map，filter和join，可以把相同的运算同时作用在许多数据单元上，这样的变换只会产生新的RDD而不改变旧的RDD。这种模型可以让Spark用**Lineage**很高效地容错（后面会有介绍）。
+- **Fault tolerance**: 通过Lineage实现容错。其他的in-memory storage on clusters，基本单元是可变的，用细粒度更新（**fine-grained updates**）方式改变状态，如改变table/cell里面的值，这种模型的容错只能通过复制多个数据copy，需要传输大量的数据，容错效率低下。而RDD是**不可变的（immutable）**，通过粗粒度变换（**coarse-grained transformations**），比如map，filter和join，可以把相同的运算同时作用在许多数据单元上，这样的变换只会产生新的RDD而不改变旧的RDD。这种模型可以让Spark用**Lineage**很高效地容错（后面会有介绍）。
 
 ### 1.1.2 **RDD定义**
 
@@ -31,7 +35,7 @@ RDD是spark的核心，也是整个spark的架构基础，RDD是弹性分布式�
 
 ### 1.1.3 **RDD特点**
 
-- immutable：只读，任何操作都不会改变RDD本身，只会创造新的RDD
+- immutable：只读，任何操作都不会改变RDD本身，只会创造新的RDD，例如map操作，将MapRdd转换为MapPartitionsRdd
 - fault-tolerant：容错，通过Lineage可以高效容错
 - partitioned：分片，RDD以partition作为最小存储和计算单元，分布在cluster的不同nodes上，一个node可以有多个partitions，一个partition只能在一个node上
 - in parallel：并行，一个Task对应一个partition，Tasks之间相互独立可以并行计算
@@ -41,11 +45,11 @@ RDD是spark的核心，也是整个spark的架构基础，RDD是弹性分布式�
 
 ### 1.1.4 **RDD抽象概念**
 
-一个RDD定义了对数据的一个操作过程, 用户提交的计算任务可以由多个RDD构成。多个RDD可以是对单个/多个数据的多个操作过程。多个RDD之间的关系使用依赖来表达。操作过程就是用户自定义的函数。
+**一个RDD定义了对数据的一个操作过程, 用户提交的计算任务可以由多个RDD构成**。多个RDD可以是对单个/多个数据的多个操作过程。多个RDD之间的关系使用依赖来表达。操作过程就是用户自定义的函数。
 
 RDD(弹性分布式数据集)去掉形容词，主体为：数据集。如果认为RDD就是数据集，那就有点理解错了。个人认为：RDD是定义对partition数据项转变的高阶函数，应用到输入源数据，输出转变后的数据，即：**RDD是一个数据集到另外一个数据集的映射，而不是数据本身。** 这个概念类似数学里的函数`f(x) = ax^2 + bx + c`。这个映射函数可以被序列化，所要被处理的数据被分区后分布在不同的机器上，应用一下这个映射函数，得出结果，聚合结果。
 
-这些集合是弹性的，如果数据集一部分丢失，则可以对它们进行重建。具有自动容错、位置感知调度和可伸缩性，而容错性是最难实现的，大多数分布式数据集的容错性有两种方式：数据检查点和记录数据的更新。对于大规模数据分析系统，数据检查点操作成本高，主要原因是大规模数据在服务器之间的传输带来的各方面的问题，相比记录数据的更新，RDD也只支持粗粒度的转换共享状态而非细粒度的更新共享状态，也就是记录如何从其他RDD转换而来(即lineage)，以便恢复丢失的分区。 
+这些集合是弹性的，如果数据集一部分丢失，则可以对它们进行重建。具有自动容错、位置感知调度和可伸缩性，而容错性是最难实现的，**大多数分布式数据集的容错性有两种方式：数据检查点和记录数据的更新**。对于大规模数据分析系统，数据检查点操作成本高，主要原因是大规模数据在服务器之间的传输带来的各方面的问题，相比记录数据的更新，RDD也只支持粗粒度的转换共享状态而非细粒度的更新共享状态，也就是**记录**如何从其他RDD**转换**而来(即lineage)，以便恢复丢失的分区。 
 
 RDDs 非常适合将相同操作应用在整个数据集的所有的元素上的批处理应用. 在这些场景下, RDDs 可以利用血缘关系图来高效的记住每一个 transformations 的步骤, 并且不需要记录大量的数据就可以恢复丢失的分区数据. RDDs 不太适合用于需要异步且细粒度的更新共享状态的应用, 比如一个 web 应用或者数据递增的 web 爬虫应用的存储系统。
 
@@ -112,7 +116,7 @@ textFile等读取数据操作和persist和cache缓存操作也是惰性的
 
 为什么要使用惰性求值呢：使用惰性求值可以把一些操作合并到一起来减少数据的计算步骤，提高计算效率。
 
-从惰性求值角度看RDD就是一组spark计算指令的列表
+**从惰性求值角度看RDD就是一组spark计算指令的列表**
 
 ### 1.3.4 缓存策略
 
@@ -157,7 +161,7 @@ class StorageLevel private(
 
 1. `persist`操作，可以将RDD持久化到不同层次的存储介质，以便后续操作重复使用。
 
-　　  1)cache:RDD[T]  默认使用`MEMORY_ONLY`
+　　  1)cache:RDD[T]  =`persist(MEMORY_ONLY)`
 
 　　  2)persist:RDD[T] 默认使用`MEMORY_ONLY`
 
@@ -256,7 +260,7 @@ B---E[RangeDependency<br>范围依赖]
 
 ![窄依赖](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/narrowDependency.png)
 
-Shuffle 依赖中，父 RDD 中的分区可能会被多个子 RDD 分区使用。因为父 RDD 中一个分区内的数据会被分割，发送给子 RDD 的所有分区，因此 Shuffle 依赖也意味着父 RDD 与子 RDD 之间存在着 Shuffle 过程。下图展示了几类常见的Shuffle依赖及其对应的转换操作。
+Shuffle 依赖中，**父 RDD 中的分区可能会被多个子 RDD 分区使用**。因为父 RDD 中一个分区内的数据会被分割，发送给子 RDD 的所有分区，因此 Shuffle 依赖也意味着父 RDD 与子 RDD 之间存在着 Shuffle 过程。下图展示了几类常见的Shuffle依赖及其对应的转换操作。
 
 ![窄依赖](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/wideDependency.png)
 
@@ -270,8 +274,6 @@ Shuffle 依赖的对应实现为`ShuffleDependency` 类,其实现比较复杂，
 - `KeyOrdering`：键值排序策略，用于决定子 RDD 的一个分区内，如何根据键值对 类型数据记录进行排序。
 - `Aggregator`：聚合器，内部包含了多个聚合函数，比较重要的函数有 `createCombiner：V => C`，`mergeValue: (C, V) => C` 以及 `mergeCombiners: (C, C) => C`。例如，对于 `groupByKey` 操作，`createCombiner` 表示把第一个元素放入到集合中，`mergeValue` 表示一个元素添加到集合中，`mergeCombiners` 表示把两个集合进行合并。这些函数被用于 Shuffle 过程中数据的聚合。
 - `mapSideCombine`：用于指定 Shuffle 过程中是否需要在 map 端进行 combine 操作。如果指定该值为 `true`，由于 combine 操作需要用到聚合器中的相关聚合函数，因此 `Aggregator` 不能为空，否则 Apache Spark 会抛出异常。例如：`groupByKey` 转换操作对应的`ShuffleDependency`中，`mapSideCombine = false`，而 `reduceByKey` 转换操作中，`mapSideCombine = true`。
-
-
 
 依赖关系是两个 RDD 之间的依赖，因此若一次转换操作中父 RDD 有多个，则可能会同时包含窄依赖和 Shuffle 依赖，下图所示的 `Join` 操作，RDD a 和 RDD c 采用了相同的分区器，两个 RDD 之间是窄依赖，Rdd b 的分区器与 RDD c 不同，因此它们之间是 Shuffle 依赖，具体实现可参见 `CoGroupedRDD` 类的 `getDependencies` 方法。这里能够再次发现：**一个依赖对应的是两个 RDD，而不是一次转换操作。**
 
@@ -287,7 +289,7 @@ Shuffle 依赖的对应实现为`ShuffleDependency` 类,其实现比较复杂，
 
 ![fault-tolrarnt0](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/fault-tolrarnt1.png)
 
-这个例子并不是特别严谨，按照我们的思维，只有执行了持久化，存储在存储介质中的 RDD 分区才会出现数据丢失的情况，但是上例中最终的 RDD 并没有执行持久化操作。事实上，Apache Spark 将没有被持久化数据重新被计算，以及持久化的数据第一次被计算，也等价视为数据“丢失”，在 1.7 节中我们会看到这一点。
+这个例子并不是特别严谨，按照我们的思维，只有执行了持久化，存储在存储介质中的 RDD 分区才会出现数据丢失的情况，但是上例中最终的 RDD 并没有执行持久化操作。事实上，Apache Spark 将没有被持久化数据重新被计算，以及持久化的数据第一次被计算，也等价视为数据“丢失”。
 
 ### 2.2.4 依赖与并行计算
 
@@ -331,56 +333,6 @@ RDD是通过一系列transformation操作进行计算的，而这些transformati
 ## 2.5 RDD 分区器
 
 [前往查看详情...](https://sustcoder.github.io/2018/12/10/sparkCore-sourceCodeAnalysis_partitioner/)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

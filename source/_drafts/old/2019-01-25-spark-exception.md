@@ -241,7 +241,7 @@ TaskScheduler在发送task的时候，会根据数据所在的节点发送task,�
 
   **如果想让每一个task都能拿到最好的数据本地化级别，那么调优点就是等待时间加长。注意！如果过度调大等待时间，虽然为每一个task都拿到了最好的数据本地化级别，但是我们job执行的时间也会随之延长**
 
-![img](E:\data\oss\spark\522d5951fa4a69047c5130d4bc9260cd256.jpg)
+![img](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/522d5951fa4a69047c5130d4bc9260cd256.jpg)
 
 [查看更多...](https://my.oschina.net/u/2000675/blog/2999579)
 
@@ -287,11 +287,11 @@ sampleData.repartition(500).foreachPartition(rows => {
 
 ## 合理的设置executor数量和内存
 
-![log1](E:\data\oss\spark\log1.png)
+![log1](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/log1.png)
 
 
 
-![log2](E:\data\oss\spark\log2.png)
+![log2](https://sustblog.oss-cn-beijing.aliyuncs.com/blog/2018/spark/log2.png)
 
 ## 
 

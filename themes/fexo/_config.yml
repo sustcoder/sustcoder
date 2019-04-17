@@ -16,12 +16,12 @@ home_nav:
   - name: Blog
     url: /blog
     target_blank: false #不在新页面打开
+  - name: Oschina
+    url: http://my.oschina.net/freelili
+    target_blank: true    
   - name: Github
     url: https://github.com/sustcoder
     target_blank: true #在新页面打开
-  - name: Oschina
-    url: http://my.oschina.net/freelili
-    target_blank: true
   - name: About
     url: /about/
     target_blank: false 
